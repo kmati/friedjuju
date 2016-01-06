@@ -300,4 +300,23 @@ Okay, how about refactoring this further?
 }
 ```
 
-The above is cool because it is a flattened JSON version of the hierarchical structure represented by the HTML template.
+And once again the special characters in the JSON above are:
+
+```
+@ is a prefix for an HTML/XML attribute
+~name-n is a way of connoting the ordering of elements with the same tagName, e.g. multiple <tr> elements can be listed as ~tr-0 (for the first one), ~tr-1 (for the second one), etc.
+$str connotes plain text
+?xxx denotes a template item to be replaced
+```
+
+
+The above is cool because it is a flattened JSON version of the hierarchical structure represented by the HTML template. The cool thing about it id that there is:
+
+* a single object
+* the single object is in key/value pair format
+* the keys are the object paths to be created
+* the values are the values to be placed within the objects at the specified paths
+
+
+
+
