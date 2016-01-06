@@ -330,6 +330,48 @@ The above is cool because it is a flattened JSON version of the hierarchical str
 * the values are the values to be placed within the objects at the specified paths
 
 
+# Can we get rid of the annoying ~ usage?
+
+Consider again *Compressed Snippet A*:
+
+*Compressed Snippet A:*
+
+```
+{
+	'table.@class': 'personal-info-grid',
+	'table.~tr-0.td': [ 'Name', '?first-name ?last-name' ],
+	'table.~tr-1.td': { '@colspan': 2, '$str': '?age years old' },
+	'table.some-custom-element': 'This is where the address starts',
+	'table.~tr-2': { '@class': 'address-street', 'td': [ 'Street', '?street ?apt' ] },
+	'table.~tr-3.td': [ 'City', '?city' ],
+	'table.~tr-4.td': [ 'State', '?state' ],
+	'table.~tr-5.td': [ 'Zip', '?zip' ],
+	'table.~tr-6.td': [ 'Country', '?country' ]
+}
+```
+
+We use the ~tr-n formalism to indicate position within the context, i.e. 'table.~tr-0' means the first <tr> element within the <table> element, and 'table.~tr-1' means the second <tr> element within the <table> element.
+
+Is there not a prettier way to denote position without the annoying ~ expressions?
+
+```
+{
+	'table.@class': 'personal-info-grid',
+
+	// TODO: Complete this!!
+
+
+	'table.~tr-0.td': [ 'Name', '?first-name ?last-name' ],
+	'table.~tr-1.td': { '@colspan': 2, '$str': '?age years old' },
+	'table.some-custom-element': 'This is where the address starts',
+	'table.~tr-2': { '@class': 'address-street', 'td': [ 'Street', '?street ?apt' ] },
+	'table.~tr-3.td': [ 'City', '?city' ],
+	'table.~tr-4.td': [ 'State', '?state' ],
+	'table.~tr-5.td': [ 'Zip', '?zip' ],
+	'table.~tr-6.td': [ 'Country', '?country' ]
+}
+```
+
 
 # What can all this be used for?
 
