@@ -268,37 +268,43 @@ Then the JSON could be:
 
 How about compressing the JSON semantically? The idea would be that dot expressions could be used in the property names. They would describe the path to an object to be generated. Any intermediate objects that do not exist will be created.
 
+*Compressed Snippet A:*
+
 ```
 {
 	'table.@class': 'personal-info-grid',
-	'table.~tr-0.~td-0': [ 'Name', '?first-name ?last-name' ],
-	'table.~tr-0.~td-1': { '@colspan': 2, '$str': '?age years old' },
+	'table.~tr-0.td': [ 'Name', '?first-name ?last-name' ],
+	'table.~tr-1.td': { '@colspan': 2, '$str': '?age years old' },
 	'table.some-custom-element': 'This is where the address starts',
-	'table.~tr-1': { '@class': 'address-street', 'td': [ 'Street', '?street ?apt' ] },
-	'table.~tr-1.td': [ 'City', '?city' ],
-	'table.~tr-1.td': [ 'State', '?state' ],
-	'table.~tr-1.td': [ 'Zip', '?zip' ],
-	'table.~tr-1.td': [ 'Country', '?country' ]
+	'table.~tr-2': { '@class': 'address-street', 'td': [ 'Street', '?street ?apt' ] },
+	'table.~tr-3.td': [ 'City', '?city' ],
+	'table.~tr-4.td': [ 'State', '?state' ],
+	'table.~tr-5.td': [ 'Zip', '?zip' ],
+	'table.~tr-6.td': [ 'Country', '?country' ]
 }
 ```
 
 Okay, how about refactoring this further?
 
+*Compressed Snippet B:*
+
 ```
 {
 	'table.@class': 'personal-info-grid',
-	'table.~tr-0.~td-0': [ 'Name', '?first-name ?last-name' ],
-	'table.~tr-0.~td-1.@colspan': 2,
-	'table.~tr-0.~td-1.$str': '?age years old',
+	'table.~tr-0.td': [ 'Name', '?first-name ?last-name' ],
+	'table.~tr-1.td.@colspan': 2,
+	'table.~tr-1.td.$str': '?age years old',
 	'table.some-custom-element': 'This is where the address starts',
-	'table.~tr-1.@class': 'address-street',
-	'table.~tr-1.td': [ 'Street', '?street ?apt' ] },
-	'table.~tr-1.td': [ 'City', '?city' ],
-	'table.~tr-1.td': [ 'State', '?state' ],
-	'table.~tr-1.td': [ 'Zip', '?zip' ],
-	'table.~tr-1.td': [ 'Country', '?country' ]
+	'table.~tr-2.@class': 'address-street',
+	'table.~tr-2.td': [ 'Street', '?street ?apt' ],
+	'table.~tr-3.td': [ 'City', '?city' ],
+	'table.~tr-4.td': [ 'State', '?state' ],
+	'table.~tr-5.td': [ 'Zip', '?zip' ],
+	'table.~tr-6.td': [ 'Country', '?country' ]
 }
 ```
+
+Of these 2 JSON snippets above, I prefer *Compressed Snippet A* which has 9 properties rather than 11! So we conclude that *Compressed Snippet B* is a little too flat...
 
 And once again the special characters in the JSON above are:
 
@@ -307,6 +313,12 @@ And once again the special characters in the JSON above are:
 ~name-n is a way of connoting the ordering of elements with the same tagName, e.g. multiple <tr> elements can be listed as ~tr-0 (for the first one), ~tr-1 (for the second one), etc.
 $str connotes plain text
 ?xxx denotes a template item to be replaced
+```
+
+but we also add a new rule:
+
+```
+some-name: [] connotes a collection of <some-name> elements
 ```
 
 
@@ -319,4 +331,7 @@ The above is cool because it is a flattened JSON version of the hierarchical str
 
 
 
+# What can all this be used for?
+
+This use of JSON to represent UI content can work for any markup: HTML, SVG and other XML variants.
 
