@@ -139,10 +139,10 @@ The above JSON uses arrays to connote multiple elements whose tagName is 'tr'. I
 Questions:
 ==========
 
-1. What if there is an attribute on one <tr> element that is not found in others?
+1. What if there is an attribute on one <tr> element that is not found on others?
 2. What if there is an element between the <tr> elements?
 
-Answer to Question #1: What if there is an attribute on one <tr> element that is not found in others?
+Answer to Question #1: What if there is an attribute on one <tr> element that is not found on others?
 -----------------------------------------------------------------------------------------------------
 
 To answer the question #1 above, consider this HTML:
@@ -265,3 +265,39 @@ Then the JSON could be:
 }
 ```
 
+
+How about compressing the JSON semantically? The idea would be that dot expressions could be used in the property names. They would describe the path to an object to be generated. Any intermediate objects that do not exist will be created.
+
+```
+{
+	'table.@class': 'personal-info-grid',
+	'table.~tr-0.~td-0': [ 'Name', '?first-name ?last-name' ],
+	'table.~tr-0.~td-1': { '@colspan': 2, '$str': '?age years old' },
+	'table.some-custom-element': 'This is where the address starts',
+	'table.~tr-1': { '@class': 'address-street', 'td': [ 'Street', '?street ?apt' ] },
+	'table.~tr-1.td': [ 'City', '?city' ],
+	'table.~tr-1.td': [ 'State', '?state' ],
+	'table.~tr-1.td': [ 'Zip', '?zip' ],
+	'table.~tr-1.td': [ 'Country', '?country' ]
+}
+```
+
+Okay, how about refactoring this further?
+
+```
+{
+	'table.@class': 'personal-info-grid',
+	'table.~tr-0.~td-0': [ 'Name', '?first-name ?last-name' ],
+	'table.~tr-0.~td-1.@colspan': 2,
+	'table.~tr-0.~td-1.$str': '?age years old',
+	'table.some-custom-element': 'This is where the address starts',
+	'table.~tr-1.@class': 'address-street',
+	'table.~tr-1.td': [ 'Street', '?street ?apt' ] },
+	'table.~tr-1.td': [ 'City', '?city' ],
+	'table.~tr-1.td': [ 'State', '?state' ],
+	'table.~tr-1.td': [ 'Zip', '?zip' ],
+	'table.~tr-1.td': [ 'Country', '?country' ]
+}
+```
+
+The above is cool because it is a flattened JSON version of the hierarchical structure represented by the HTML template.
