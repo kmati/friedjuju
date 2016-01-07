@@ -287,7 +287,7 @@ How about compressing the JSON semantically? The idea would be that dot expressi
 	'table.$0tr.td': [ 'Name', '?first-name ?last-name' ],
 	'table.$1tr.td': { '@colspan': 2, '$str': '?age years old' },
 	'table.some-custom-element': 'This is where the address starts',
-	'table.~$2tr': { '@class': 'address-street', 'td': [ 'Street', '?street ?apt' ] },
+	'table.$2tr': { '@class': 'address-street', 'td': [ 'Street', '?street ?apt' ] },
 	'table.$3tr.td': [ 'City', '?city' ],
 	'table.$4tr.td': [ 'State', '?state' ],
 	'table.$5tr.td': [ 'Zip', '?zip' ],
@@ -336,6 +336,17 @@ The compressed JSON above is cool because it is a flattened JSON version of the 
 * the values are the values to be placed within the objects at the specified paths
 * it uses dot notation in a readable manner
 
+
+# Rules
+
+The following rules specify how the JSON is transformed into markup:
+
+1. A JSON object will be transformed into markup
+2. @ is a prefix for a markup attribute, e.g. @class, @id, @style, etc.
+3. $number is a prefix that specifies the instance number of an element, e.g. $0tr, $1td, etc.
+4. $str is a property whose value is plain text
+5. Arrays are used to replicate elements with a single tagName specified by the property that owns the array, e.g. tr: [ ... ] will create multiple <tr> elements
+6. You can use dot expressions in the property names as a shorthand notation. The elements will be recursively created.
 
 
 # What can all this be used for?
