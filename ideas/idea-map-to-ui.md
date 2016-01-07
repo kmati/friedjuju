@@ -54,33 +54,33 @@ The above UI could be rendered in JSON as:
 {
 	table: {
 		'@class': 'personal-info-grid',
-		'~tr-0': {
-			'~td-0': 'Name',
-			'~td-1': '?first-name ?last-name'
+		'$0tr': {
+			'$0td': 'Name',
+			'$1td': '?first-name ?last-name'
 		},
-		'~tr-1': {
+		'$1tr': {
 			'@colspan': 2,
 			'$str': '?age years old'
 		},
-		'~tr-2': {
-			'~td-0': 'Street',
-			'~td-1': '?street ?apt'
+		'$2tr': {
+			'$0td': 'Street',
+			'$1td': '?street ?apt'
 		},
-		'~tr-3': {
-			'~td-0': 'City',
-			'~td-1': '?city'
+		'$3tr': {
+			'$0td': 'City',
+			'$1td': '?city'
 		},
-		'~tr-4': {
-			'~td-0': 'State',
-			'~td-1': '?state'
+		'$4tr': {
+			'$0td': 'State',
+			'$1td': '?state'
 		},
-		'~tr-5': {
-			'~td-0': 'Zip',
-			'~td-1': '?zip'
+		'$5tr': {
+			'$0td': 'Zip',
+			'$1td': '?zip'
 		},
-		'~tr-6': {
-			'~td-0': 'Country',
-			'~td-1': '?country'
+		'$6tr': {
+			'$0td': 'Country',
+			'$1td': '?country'
 		}
 	}
 }
@@ -90,12 +90,18 @@ where:
 
 ```
 @ is a prefix for an HTML/XML attribute
-~name-n is a way of connoting the ordering of elements with the same tagName, e.g. multiple <tr> elements can be listed as ~tr-0 (for the first one), ~tr-1 (for the second one), etc.
-$str connotes plain text
+$number is a way of specifying the instance number of an element; e.g. $0tr is the first <tr> element, $1tr is the second <tr> element, etc.
+$str is a property whose value is plain text
 ?xxx denotes a template item to be replaced
 ```
 
-Now, the JSON above is actually longer than the HTML template we're trying to replace. Okay, yeah, we get the benefit of the "template" being in JSON and so we can rejoice in that. Yes we can retrieve this directly from a JSON store (e.g. mongodb or couchbase or some REST service); however, we can do better....
+# What's with the $number stuff?
+
+That is necessary because JSON does not like you to have multiple properties of an object with the same name. What winds up happening in that case is that only the last property gets applied to the object. So we use the $number-hack to help us get around this restriction.
+
+
+
+Now, the JSON above is actually longer than the HTML template we're trying to replace. We do get the benefit of the "template" being in JSON, which is a good thing. And, yes, we can retrieve this directly from a JSON store (e.g. mongodb or couchbase or some REST service); however, we can do better....
 
 
 The following is an idea to improve the repeating element situation:
@@ -134,7 +140,11 @@ The following is an idea to improve the repeating element situation:
 }
 ```
 
-The above JSON uses arrays to connote multiple elements whose tagName is 'tr'. It also uses arrays to connote multiple elements whose tagName is 'td'.
+The above JSON uses arrays to connote multiple elements whose tagName is 'tr'. It also uses arrays to connote multiple elements whose tagName is 'td'. From this we derive a new rule, that:
+
+```
+foo: [ ... ] means that there will be multiple <foo> elements generated whose contents are specified by the contents of the array.
+```
 
 Questions:
 ==========
@@ -211,6 +221,7 @@ Then the JSON could be:
 }
 ```
 
+
 Answer to Question #2: What if there is an element between the <tr> elements?
 -----------------------------------------------------------------------------
 
@@ -249,12 +260,12 @@ Then the JSON could be:
 {
 	table: {
 		'@class': 'personal-info-grid',
-		'~tr-0': [
+		'$0tr': [
 			{ 'td': [ 'Name', '?first-name ?last-name' ] },
 			{ 'td': { '@colspan': 2, '$str': '?age years old' } }
 		],
 		'some-custom-element': 'This is where the address starts',
-		'~tr-1': [
+		'$1tr': [
 			{ '@class': 'address-street', 'td': [ 'Street', '?street ?apt' ] },
 			{ 'td': [ 'City', '?city' ] },
 			{ 'td': [ 'State', '?state' ] },
@@ -273,14 +284,14 @@ How about compressing the JSON semantically? The idea would be that dot expressi
 ```
 {
 	'table.@class': 'personal-info-grid',
-	'table.~tr-0.td': [ 'Name', '?first-name ?last-name' ],
-	'table.~tr-1.td': { '@colspan': 2, '$str': '?age years old' },
+	'table.$0tr.td': [ 'Name', '?first-name ?last-name' ],
+	'table.$1tr.td': { '@colspan': 2, '$str': '?age years old' },
 	'table.some-custom-element': 'This is where the address starts',
-	'table.~tr-2': { '@class': 'address-street', 'td': [ 'Street', '?street ?apt' ] },
-	'table.~tr-3.td': [ 'City', '?city' ],
-	'table.~tr-4.td': [ 'State', '?state' ],
-	'table.~tr-5.td': [ 'Zip', '?zip' ],
-	'table.~tr-6.td': [ 'Country', '?country' ]
+	'table.~$2tr': { '@class': 'address-street', 'td': [ 'Street', '?street ?apt' ] },
+	'table.$3tr.td': [ 'City', '?city' ],
+	'table.$4tr.td': [ 'State', '?state' ],
+	'table.$5tr.td': [ 'Zip', '?zip' ],
+	'table.$6tr.td': [ 'Country', '?country' ]
 }
 ```
 
@@ -291,16 +302,16 @@ Okay, how about refactoring this further?
 ```
 {
 	'table.@class': 'personal-info-grid',
-	'table.~tr-0.td': [ 'Name', '?first-name ?last-name' ],
-	'table.~tr-1.td.@colspan': 2,
-	'table.~tr-1.td.$str': '?age years old',
+	'table.$0tr.td': [ 'Name', '?first-name ?last-name' ],
+	'table.$1tr.td.@colspan': 2,
+	'table.$1tr.td.$str': '?age years old',
 	'table.some-custom-element': 'This is where the address starts',
-	'table.~tr-2.@class': 'address-street',
-	'table.~tr-2.td': [ 'Street', '?street ?apt' ],
-	'table.~tr-3.td': [ 'City', '?city' ],
-	'table.~tr-4.td': [ 'State', '?state' ],
-	'table.~tr-5.td': [ 'Zip', '?zip' ],
-	'table.~tr-6.td': [ 'Country', '?country' ]
+	'table.$2tr.@class': 'address-street',
+	'table.$2tr.td': [ 'Street', '?street ?apt' ],
+	'table.$3tr.td': [ 'City', '?city' ],
+	'table.$4tr.td': [ 'State', '?state' ],
+	'table.$5tr.td': [ 'Zip', '?zip' ],
+	'table.$6tr.td': [ 'Country', '?country' ]
 }
 ```
 
@@ -310,67 +321,21 @@ And once again the special characters in the JSON above are:
 
 ```
 @ is a prefix for an HTML/XML attribute
-~name-n is a way of connoting the ordering of elements with the same tagName, e.g. multiple <tr> elements can be listed as ~tr-0 (for the first one), ~tr-1 (for the second one), etc.
-$str connotes plain text
+$number is a way of specifying the instance number of an element; e.g. $0tr is the first <tr> element, $1tr is the second <tr> element, etc.
+$str is a property whose value is plain text
 ?xxx denotes a template item to be replaced
-```
-
-but we also add a new rule:
-
-```
-some-name: [] connotes a collection of <some-name> elements
+foo: [ ... ] means that there will be multiple <foo> elements generated whose contents are specified by the contents of the array.
 ```
 
 
-The above is cool because it is a flattened JSON version of the hierarchical structure represented by the HTML template. The cool thing about it id that there is:
+The compressed JSON above is cool because it is a flattened JSON version of the hierarchical structure represented by the HTML template. The cool thing about it id that there is:
 
 * a single object
 * the single object is in key/value pair format
 * the keys are the object paths to be created
 * the values are the values to be placed within the objects at the specified paths
+* it uses dot notation in a readable manner
 
-
-# Can we get rid of the annoying ~ usage?
-
-Consider again *Compressed Snippet A*:
-
-*Compressed Snippet A:*
-
-```
-{
-	'table.@class': 'personal-info-grid',
-	'table.~tr-0.td': [ 'Name', '?first-name ?last-name' ],
-	'table.~tr-1.td': { '@colspan': 2, '$str': '?age years old' },
-	'table.some-custom-element': 'This is where the address starts',
-	'table.~tr-2': { '@class': 'address-street', 'td': [ 'Street', '?street ?apt' ] },
-	'table.~tr-3.td': [ 'City', '?city' ],
-	'table.~tr-4.td': [ 'State', '?state' ],
-	'table.~tr-5.td': [ 'Zip', '?zip' ],
-	'table.~tr-6.td': [ 'Country', '?country' ]
-}
-```
-
-We use the ~tr-n formalism to indicate position within the context, i.e. 'table.~tr-0' means the first <tr> element within the <table> element, and 'table.~tr-1' means the second <tr> element within the <table> element.
-
-Is there not a prettier way to denote position without the annoying ~ expressions?
-
-```
-{
-	'table.@class': 'personal-info-grid',
-
-	// TODO: Complete this!!
-
-
-	'table.~tr-0.td': [ 'Name', '?first-name ?last-name' ],
-	'table.~tr-1.td': { '@colspan': 2, '$str': '?age years old' },
-	'table.some-custom-element': 'This is where the address starts',
-	'table.~tr-2': { '@class': 'address-street', 'td': [ 'Street', '?street ?apt' ] },
-	'table.~tr-3.td': [ 'City', '?city' ],
-	'table.~tr-4.td': [ 'State', '?state' ],
-	'table.~tr-5.td': [ 'Zip', '?zip' ],
-	'table.~tr-6.td': [ 'Country', '?country' ]
-}
-```
 
 
 # What can all this be used for?
