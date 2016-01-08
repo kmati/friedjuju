@@ -13,3 +13,86 @@ The other thing that dawned on me as I thought about all this is that I could us
 # We'll see what happens
 
 This project is experimental right now but I have a funny feeling it could lead somewhere...
+
+# Installation
+
+The usual, get or clone the repo and then:
+
+```
+npm install
+```
+
+At some point, I will put friedjuju on npm but for now you should get the repo from Github (https://github.com/kmati/friedjuju).
+
+# How to Build
+
+You can build the j2m library for use in the browser by:
+
+Changing the current working directory to the build directory:
+
+```
+cd build
+```
+
+From there, you should run the build-j2m.js script passing in the environment (debug or release).
+
+*Debug build:*
+
+```
+node build-j2m.js -target debug
+```
+
+*Release build:*
+
+```
+node build-j2m.js -target release
+```
+
+This will generate the j2m-{version}.js file in the bin/debug or bin/release directory (depending on the -target value). You can then use that in your web project.
+
+For example, to use j2m-0.0.1.js, you would do this:
+
+```
+<script type="text/javascript" src="path/to/j2m-0.0.1.js"/>
+```
+
+Please note that if you want to use j2m from node.js rather than from the browser then you have 2 choices:
+
+1. To require src/j2m.js
+2. To require bin/debug/j2m-{version}.js or bin/release/j2m-{version}.js
+
+# How to Use
+
+This is an example of how to use the j2m library. Simply require it if you're using node.js (or use the <script> element above).
+
+```
+var j2m = require('../bin/release/j2m-0.0.1.js');
+//var j2m = require('../src/json-to-markup/j2m.js');
+console.log('j2m = ',j2m);
+```
+
+Then invoke its execute method as shown below (this works in the browser as well as in node.js scripts):
+
+```
+var obj = {
+	molecule: {
+		'@id': 'funmole',
+		atomicWeight: 2,
+		name: 'Helium',
+		type: {
+			'Period': 1,
+			'state': 'gas',
+			'volatility': 'stable'
+		},
+		$1uses: {
+			'balloons': true,
+			'bouncy houses': false
+		},
+		$0uses: ['Industrial', 'Marketing']
+	}
+};
+
+var result = j2m.execute(obj);
+console.log('The result is:\n' + result);
+```
+

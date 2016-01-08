@@ -1,11 +1,19 @@
 {
   "name": "friedjuju",
   "version": "0.0.1",
+  "repository": "https://github.com/kmati/friedjuju",
+  "license": "MIT",
+  "description": "JSON to markup transformer",
+  "homepage": "https://github.com/kmati/friedjuju",
+  "author": {
+    "name": "Kimanzi Mati",
+    "email": "kmati@nocrunchtime.com",
+    "url": "http://www.nocrunchtime.com"
+  },
   "dependencies": {
     "uglify-js": "*"
   },
   "engines": {
-    "node": "v4.2.3",
-    "npm": "2.14.7"
+    "node": ">=0.8.0"
   }
 }
