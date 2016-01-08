@@ -117,6 +117,8 @@ The result is:
 </molecule>
 ```
 
+Please note that the ```result``` variable will hold a String which contains the markup.
+
 # Rules
 
 The following rules specify how the JSON is transformed into markup:
