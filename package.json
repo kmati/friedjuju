@@ -1,0 +1,11 @@
+{
+  "name": "friedjuju",
+  "version": "0.0.1",
+  "dependencies": {
+    "uglify-js": "*"
+  },
+  "engines": {
+    "node": "v4.2.3",
+    "npm": "2.14.7"
+  }
+}
