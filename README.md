@@ -96,6 +96,27 @@ var result = j2m.execute(obj);
 console.log('The result is:\n' + result);
 ```
 
+Based on the JavaScript code snippet above, the output to the console will be:
+
+```
+The result is:
+<molecule id="funmole">
+  <uses>Industrial</uses>
+  <uses>Marketing</uses>
+  <atomicWeight>2</atomicWeight>
+  <uses>
+    <balloons>true</balloons>
+    <bouncy houses></bouncy houses>
+  </uses>
+  <name>Helium</name>
+  <type>
+    <Period>1</Period>
+    <state>gas</state>
+    <volatility>stable</volatility>
+  </type>
+</molecule>
+```
+
 # Rules
 
 The following rules specify how the JSON is transformed into markup:
