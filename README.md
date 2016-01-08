@@ -63,7 +63,7 @@ Please note that if you want to use j2m from node.js rather than from the browse
 
 # How to Use
 
-This is an example of how to use the j2m library. Simply require it if you're using node.js (or use the <script> element above).
+This is an example of how to use the j2m library. Simply require it if you're using node.js (or use the ```<script>``` element above).
 
 ```
 var j2m = require('../bin/release/j2m-0.0.1.js');
