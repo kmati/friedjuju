@@ -86,7 +86,7 @@ var obj = {
 		},
 		$1uses: {
 			'balloons': true,
-			'bouncy houses': false
+			'bouncyHouses': false
 		},
 		$0uses: ['Industrial', 'Marketing']
 	}
@@ -108,7 +108,7 @@ The result is:
   <atomicWeight>2</atomicWeight>
   <uses>
     <balloons>true</balloons>
-    <bouncy houses></bouncy houses>
+    <bouncyHouses></bouncyHouses>
   </uses>
   <name>Helium</name>
   <type>
@@ -120,7 +120,9 @@ The result is:
 ```
 
 Please note that the ```result``` variable will hold a String which contains the markup.
-Also note that ```j2m.prettyPrint = true;``` is used to make the markup print with appropriate indentations. You can also use ```j2m.prettyPrint = false;``` to make the markup print tersely without indentations.
+
+Also note that ```j2m.prettyPrint = true;``` is used to make the markup print with appropriate indentations. You can also use ```j2m.prettyPrint = false;``` to make the markup print tersely without indentations. If you do NOT set j2m.prettyPrint then the default value is ```true```.
+
 
 # Gotcha: No top-level attribute declarations
 
@@ -146,6 +148,12 @@ var obj = {
 	}
 };
 var result = j2m.execute(obj);
+```
+
+In this case, ```result``` will be a String whose content is:
+
+```
+<foo class="some-class"></foo>
 ```
 
 # Rules

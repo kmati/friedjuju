@@ -38,17 +38,26 @@ Element.prototype.addChild = function (childElement, index) {
 	}
 
 	if (typeof index === 'undefined') {
-		this.children.push(childElement);
-	} else if (childElement instanceof Array) {
-		for (var v = childElement.length - 1; v >= 0; v--) {
-			childElement[v].indexPos = index;
+		if (childElement instanceof Array) {
+			for (var v = 0; v < childElement.length; v++) {
+				childElement[v].indexPos = index;
+				this.children.push(childElement[v]);
+			}
+		} else {
 			this.children.push(childElement);
-			//this.children.splice(index, 0, childElement[v]);
 		}
 	} else {
-		childElement.indexPos = index;
-		this.children.push(childElement);
-		//this.children.splice(index, 0, childElement);
+		if (childElement instanceof Array) {
+			// this array does a reverse read because of the resorting to be done later on
+			// with elements with index
+			for (var v = childElement.length - 1; v >= 0; v--) {
+				childElement[v].indexPos = index;
+				this.children.push(childElement[v]);
+			}
+		} else {
+			childElement.indexPos = index;
+			this.children.push(childElement);
+		}
 	}
 
 	this.sortChildren();
