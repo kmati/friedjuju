@@ -15,6 +15,7 @@ var obj = {
 			'balloons': true,
 			'bouncyHouses': false
 		},
+		'@class': 'some-class',
 		$0uses: ['Industrial', 'Marketing']
 	}
 };
