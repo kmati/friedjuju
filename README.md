@@ -108,7 +108,7 @@ The result is:
   <atomicWeight>2</atomicWeight>
   <uses>
     <balloons>true</balloons>
-    <bouncyHouses></bouncyHouses>
+    <bouncyHouses>false</bouncyHouses>
   </uses>
   <name>Helium</name>
   <type>
