@@ -10,7 +10,7 @@ function Element(tagName, child) {
 	this.attributes = [];
 	this.children = [];
 
-	if (child) {
+	if (typeof child !== 'undefined' && child !== null) {
 		if (child instanceof Element) {
 			this.addChild(child);
 		} else {
@@ -41,10 +41,59 @@ Element.prototype.addChild = function (childElement, index) {
 		this.children.push(childElement);
 	} else if (childElement instanceof Array) {
 		for (var v = childElement.length - 1; v >= 0; v--) {
-			this.children.splice(index, 0, childElement[v]);
+			childElement[v].indexPos = index;
+			this.children.push(childElement);
+			//this.children.splice(index, 0, childElement[v]);
 		}
 	} else {
-		this.children.splice(index, 0, childElement);
+		childElement.indexPos = index;
+		this.children.push(childElement);
+		//this.children.splice(index, 0, childElement);
+	}
+
+	this.sortChildren();
+}
+
+Element.prototype.sortChildren = function () {
+	var numberedSets = {};
+	for (var c = this.children.length - 1; c >= 0; c--) {
+		var child = this.children[c];
+		if (typeof child.indexPos === 'number') {
+			var arr = numberedSets[child.tagName];
+			if (!arr) {
+				numberedSets[child.tagName] = arr = [];
+			}
+
+			arr.push({
+				actualIndex: c,
+				ele: child
+			});
+
+			// temporarily blank out the element in the children array
+			// so that the elements that match the tagName and have the indexPos
+			// can be reordered
+			this.children[c] = null;
+		}
+	}
+
+	for (var tagName in numberedSets) {
+		var arr = numberedSets[tagName];
+		arr.sort(function (a, b) {
+			return a.ele.indexPos - b.ele.indexPos;
+		});
+
+		var indexes = [];
+		arr.forEach(function (item) {
+			indexes.push(item.actualIndex);
+		});
+
+		indexes.sort();
+
+		for (var i = 0; i < indexes.length; i++) {
+			var child = arr[i].ele;
+			var actualIndex = indexes[i];
+			this.children[actualIndex] = child;
+		}
 	}
 }
 

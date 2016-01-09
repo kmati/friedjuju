@@ -92,6 +92,8 @@ var obj = {
 	}
 };
 
+j2m.prettyPrint = true;
+
 var result = j2m.execute(obj);
 console.log('The result is:\n' + result);
 ```
@@ -118,6 +120,33 @@ The result is:
 ```
 
 Please note that the ```result``` variable will hold a String which contains the markup.
+Also note that ```j2m.prettyPrint = true;``` is used to make the markup print with appropriate indentations. You can also use ```j2m.prettyPrint = false;``` to make the markup print tersely without indentations.
+
+# Gotcha: No top-level attribute declarations
+
+Just like in typical markup, don't put an '@' prefix at the top level. All attributes should be enclosed within an object rather than top-level. This means:
+
+The following is WRONG:
+
+```
+var obj = {
+	'@class': 'some-class'
+};
+var result = j2m.execute(obj);
+```
+
+j2m will simply ignore any such top-level @ prefix declarations.
+
+The following is CORRECT:
+
+```
+var obj = {
+	foo: {
+		'@class': 'some-class'
+	}
+};
+var result = j2m.execute(obj);
+```
 
 # Rules
 
