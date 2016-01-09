@@ -55,71 +55,70 @@ Char := !Dot
 
 # Examples of Valid Expressions
 
-Here are a few examples of valid expressions:
+Regarding the expressions, here are some points to remember:
+
+1. The wildcard (i.e. the '*' character) can be used to signify any object or any nested set of objects.
+2. In addition, the '?' character can be used to signify a single object.
 
 
-a) The wildcard (i.e. the '*' character) can be used here.
-b) In addition, the '?' character can be used to signify a single object.
+Here are a few examples of valid expressions
 
 
-1. The following will match any JSON property whose key is 'table'
+Example #1: The following will match any JSON property whose key is 'table'
 
 ```
 table
 ```
 
-2. The following will match only the first JSON property whose key is 'table'
+Example #2. The following will match only the first JSON property whose key is 'table'
 
 ```
 $0table
 ```
 
-3. The following will match only the second JSON property whose key is 'table'
+Example #3. The following will match only the second JSON property whose key is 'table'
 
 ```
 $1table
 ```
 
-4. The following will match all tr properties within any table
+Example #4. The following will match all tr properties within any table
 
 ```
 table.tr
 ```
 
-5. The following will match all 'class' attributes of 'tr' elements in 'table' elements
+Example #5. The following will match all 'class' attributes of 'tr' elements in 'table' elements
 
 ```
 table.tr.@class
 ```
 
-
-
-
-5. The following will match all properties
+Example #6. The following will match all properties
 
 ```
 *
 ```
 
-6. The following will match any property whose key is 'foo' that is contained within any object (i.e. it is not top-level)
+Example #7. The following will match any property whose key is 'foo' that is contained within any object (i.e. it is not top-level)
 
 ```
 *.foo
 ```
 
-7. The following will match any property whose key is 'foo' that is contained within any object that is also contained within any other object (i.e. it is not top-level or 2nd-level)
+Example #8. The following will match any property whose key is 'foo' that is contained within any object that is also contained within any other object (i.e. it is not top-level or 2nd-level)
 
 ```
 *.*.foo
 ```
 
-8. The following match any property whose key is 'foo' that is contained within a top-level object
+Example #9. The following match any property whose key is 'foo' that is contained within a top-level object
 
 ```
 ?.foo
 ```
 
-9. The following match any property whose key is 'foo' that is contained within a 2nd-level object
+Example #10. The following match any property whose key is 'foo' that is contained within a 2nd-level object
 
 ```
 ?.?.foo
