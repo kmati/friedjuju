@@ -15,6 +15,24 @@ The following rules specify how the JSON is transformed into markup:
 
 # Grammar
 
+The following grammar defines the rules for parsing the dot expressions.
+
+The grammar below conforms to these simple rules:
+
+0. Each production is listed on a separate line.
+1. Left hand terms are the names of the productions.
+2. Right hand terms are the items that the productions evaluate to.
+3. The grammar productions are declared as: Left hand term := Right hand term
+4. The | character is used to signify OR, i.e. A := B | C | D means that A evaluates to B or A evaluates to C or A evaluates to D.
+5. The single quote character is used to bound literal text, i.e. '@' is interpreted as the literal @ character.
+6. The ! character is used to express that any character will match EXCEPT FOR the succeeding item, i.e. !Dot means that all characters are valid except for Dot.
+7. The + character is used to express that the preceding item is to occur 1 or more times, i.e. A+ means that the A production must occur 1 or more times, or 'x'+ means that the x character must occur 1 or more times.
+8. <Not used> The * character is used to express that the preceding item is to occur 0 or more times, i.e. A* means that the A production may occur 0 or more times, or 'x'* means that the x character may occur 0 or more times.
+9. <Not used> The ? character is used to express that the preceding item may occur 0 or 1 time only, i.e. A? means that the A production may occur 0 or once, or 'x'? means that the x character may occur 0 or once.
+
+
+*Dot Expression Grammar*
+
 ```
 Expression := [ExpressionPiece Dot]+
 
@@ -32,5 +50,79 @@ StringElement := '$str'
 
 Digit := ['0' - '9']
 
-Char := any character except Dot
+Char := !Dot
 ```
+
+# Examples of Valid Expressions
+
+Here are a few examples of valid expressions:
+
+
+a) The wildcard (i.e. the '*' character) can be used here.
+b) In addition, the '?' character can be used to signify a single object.
+
+
+1. The following will match any JSON property whose key is 'table'
+
+```
+table
+```
+
+2. The following will match only the first JSON property whose key is 'table'
+
+```
+$0table
+```
+
+3. The following will match only the second JSON property whose key is 'table'
+
+```
+$1table
+```
+
+4. The following will match all tr properties within any table
+
+```
+table.tr
+```
+
+5. The following will match all 'class' attributes of 'tr' elements in 'table' elements
+
+```
+table.tr.@class
+```
+
+
+
+
+5. The following will match all properties
+
+```
+*
+```
+
+6. The following will match any property whose key is 'foo' that is contained within any object (i.e. it is not top-level)
+
+```
+*.foo
+```
+
+7. The following will match any property whose key is 'foo' that is contained within any object that is also contained within any other object (i.e. it is not top-level or 2nd-level)
+
+```
+*.*.foo
+```
+
+8. The following match any property whose key is 'foo' that is contained within a top-level object
+
+```
+?.foo
+```
+
+9. The following match any property whose key is 'foo' that is contained within a 2nd-level object
+
+```
+?.?.foo
+```
+
+
