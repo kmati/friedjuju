@@ -68,9 +68,10 @@ Element.prototype.addChild = function (childElement, index) {
 }
 
 Element.prototype.toString = function (indent) {
+	var isIndentable = typeof indent === 'number';
 	var nextIndent = undefined;
 	var indentStr = '';
-	if (typeof indent === 'number') {
+	if (isIndentable) {
 		indentStr = '  '.repeat(indent);
 		nextIndent = indent + 1;
 	}
@@ -83,7 +84,7 @@ Element.prototype.toString = function (indent) {
 
 	str += '>';
 
-	if (this.children.length > 0 && this.children[0] instanceof Element) {
+	if (isIndentable && this.children.length > 0 && this.children[0] instanceof Element) {
 		// first child is an element so break to newline
 		str += '\n';
 	}
@@ -92,14 +93,14 @@ Element.prototype.toString = function (indent) {
 		str += child.toString(nextIndent);
 	});
 
-	if (this.children.length > 0 && this.children[0] instanceof Element) {
+	if (isIndentable && this.children.length > 0 && this.children[0] instanceof Element) {
 		// first child is an element so indent before the end tag
 		str += indentStr;
 	}
 
 	str += '</' + this.tagName + '>';
 
-	if (indentStr) {
+	if (isIndentable) {
 		str += '\n';
 	}
 
@@ -144,6 +145,9 @@ String.prototype.repeat = function (count) {
 var j2mTransformer = require('./j2mTransformer.js'),
 	markupPrinter = require('./markupPrinter.js');
 
+// We need window for the browser-side so that j2m is declared globally on the browser;
+// however, since node.js has no window object, we merely create one here so that the
+// var j2m = window.j2m = { ... } declaration works.
 if (typeof window === 'undefined') {
 	window = {};
 }
@@ -152,12 +156,19 @@ if (typeof window === 'undefined') {
  * j2m
  */
 var j2m = window.j2m = {
+	// true = pretty print (indentation and newlines); false = print in terse format (no indentation or new lines)
+	prettyPrint: true,
+
+	// Execute the transformation of an object into markup
+	// obj: The object to transform
+	// Returns: The markup string
 	execute: function (obj) {
 		var rootEle = j2mTransformer.transform(obj);
+		var fnPrint = this.prettyPrint ? markupPrinter.prettyPrint : markupPrinter.print;
 
 		var str = '';
 		rootEle.children.forEach(function (ele) {
-			str += markupPrinter.prettyPrint(ele);
+			str += fnPrint.call(markupPrinter, ele);
 		});
 		return str;
 	}
@@ -174,13 +185,17 @@ var Attr = require('./Attr.js'),
 	Element = require('./Element.js');
 
 /* *******************
- * j2mTransformer: Used to perform the JSON to markup transformations
+ * j2mTransformer: Used to perform the JSON to markup transformations.
+ * This is the actual worker that is invoked by the j2m.js module.
  */
 var j2mTransformer = {
 	// Transforms an object into markup
 	// obj: The object to transform into markup
 	// targetEle: [OPTIONAL] The target element to render into
+	//				targetEle is modified by this method.
 	// Returns: The target element into which the content has been created
+	// External Calling Syntax: j2mTransformer.transform(obj)
+	// Internal Recursive Calling Syntax: j2mTransformer.transform(obj, targetEle)
 	transform: function (obj, targetEle) {
 		if (!targetEle) {
 			targetEle = new Element('__ROOT__');

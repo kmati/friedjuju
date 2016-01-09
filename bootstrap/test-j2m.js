@@ -1,6 +1,5 @@
 var j2m = require('../bin/release/j2m-0.0.1.js');
 //var j2m = require('../src/json-to-markup/j2m.js');
-console.log('j2m = ',j2m);
 
 var obj = {
 	molecule: {
@@ -19,6 +18,8 @@ var obj = {
 		$0uses: ['Industrial', 'Marketing']
 	}
 };
+
+j2m.prettyPrint = true;
 
 var result = j2m.execute(obj);
 console.log('The result is:\n' + result);

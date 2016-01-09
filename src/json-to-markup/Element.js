@@ -49,9 +49,10 @@ Element.prototype.addChild = function (childElement, index) {
 }
 
 Element.prototype.toString = function (indent) {
+	var isIndentable = typeof indent === 'number';
 	var nextIndent = undefined;
 	var indentStr = '';
-	if (typeof indent === 'number') {
+	if (isIndentable) {
 		indentStr = '  '.repeat(indent);
 		nextIndent = indent + 1;
 	}
@@ -64,7 +65,7 @@ Element.prototype.toString = function (indent) {
 
 	str += '>';
 
-	if (this.children.length > 0 && this.children[0] instanceof Element) {
+	if (isIndentable && this.children.length > 0 && this.children[0] instanceof Element) {
 		// first child is an element so break to newline
 		str += '\n';
 	}
@@ -73,14 +74,14 @@ Element.prototype.toString = function (indent) {
 		str += child.toString(nextIndent);
 	});
 
-	if (this.children.length > 0 && this.children[0] instanceof Element) {
+	if (isIndentable && this.children.length > 0 && this.children[0] instanceof Element) {
 		// first child is an element so indent before the end tag
 		str += indentStr;
 	}
 
 	str += '</' + this.tagName + '>';
 
-	if (indentStr) {
+	if (isIndentable) {
 		str += '\n';
 	}
 

@@ -3,13 +3,17 @@ var Attr = require('./Attr.js'),
 	Element = require('./Element.js');
 
 /* *******************
- * j2mTransformer: Used to perform the JSON to markup transformations
+ * j2mTransformer: Used to perform the JSON to markup transformations.
+ * This is the actual worker that is invoked by the j2m.js module.
  */
 var j2mTransformer = {
 	// Transforms an object into markup
 	// obj: The object to transform into markup
 	// targetEle: [OPTIONAL] The target element to render into
+	//				targetEle is modified by this method.
 	// Returns: The target element into which the content has been created
+	// External Calling Syntax: j2mTransformer.transform(obj)
+	// Internal Recursive Calling Syntax: j2mTransformer.transform(obj, targetEle)
 	transform: function (obj, targetEle) {
 		if (!targetEle) {
 			targetEle = new Element('__ROOT__');

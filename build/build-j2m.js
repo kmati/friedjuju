@@ -118,6 +118,7 @@ function createBuilder() {
 
 			index++;
 			if (index >= services.length) {
+				console.log('Build output directory: ' + ctxt.binDir);
 				callback();
 				return;
 			}
@@ -131,6 +132,7 @@ function createBuilder() {
 
 	return {
 		build: function (target, callback) {
+			console.log('Building target: ' + target);
 			var services = buildServices[target];
 			executeServices(target, services, callback);
 		}
@@ -139,7 +141,7 @@ function createBuilder() {
 
 function showUsage() {
 	console.log('Usage:');
-	console.log('node ' + process.argv[1] + ' -target {debug|release}');
+	console.log('node ' + process.argv[1] + ' -target {debug|release|all}');
 }
 
 if (process.argv.length < 2) {
@@ -156,17 +158,39 @@ for (var c = 2; c < process.argv.length; c += 2) {
 	}
 }
 
-if (target !== 'release' && target !== 'debug') {
+if (target !== 'release' && target !== 'debug' && target !== 'all') {
 	showUsage();
 	return;
 }
 
-console.log('target = ' + target);
+console.log('****************************************');
+console.log('*                                      *');
+console.log('*    build-j2m: The builder for j2m    *');
+console.log('*   Copyright (c) 2016 Kimanzi Mati    *');
+console.log('*              MIT License             *');
+console.log('*                                      *');
+console.log('****************************************');
+
 var builder = createBuilder();
-builder.build(target, function (err) {
+
+function allDone(err) {
 	if (err) {
 		console.error(err);
 	} else {
 		//console.log('Build Completed');
 	}
-});
+}
+
+if (target === 'all') {
+	builder.build('debug', function (err) {
+		if (err) {
+			allDone(err);
+			return;
+		}
+
+		builder.build('release', allDone);
+	});
+} else {
+	builder.build(target, allDone);
+}
+
