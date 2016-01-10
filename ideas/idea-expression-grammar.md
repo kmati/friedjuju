@@ -46,15 +46,15 @@ The grammar below conforms to these simple rules:
 *Dot Expression Grammar for Usage 1 (see below)*
 
 ```
-Expression := ( ExpressionPiece Dot )+
+Expression := ( ExpressionPiece ( Dot ExpressionPiece )* )
 
 Dot := '.'
 
 ExpressionPiece := Attribute | Element | NumberPrefixedElement | StringElement
 
-Attribute := ( '@' Char+ )
+Attribute := ( '@' Usage1Char+ )
 
-Element := Char+
+Element := Usage1Char+
 
 NumberPrefixedElement := ( '$' Digit+ Element )
 
@@ -62,7 +62,7 @@ StringElement := '$str'
 
 Digit := ( '0' - '9' )
 
-Char := ( !Dot & !Wildcard & !SingleObjectPlaceholder )
+Usage1Char := ( !Dot & !Wildcard & !SingleObjectPlaceholder )
 
 Wildcard := '*'
 
@@ -74,17 +74,21 @@ SingleObjectPlaceholder := '?'
 There are changes to the Grammar for Usage 1 that need to be made to support Usages 2 and 3. The changes are:
 
 ```
+Attribute := ( '@' Char+ )
+
 BoundedAttributeExpression := '[' Attribute '=' Char+ ']'
 
 ArrayIndex := '[' Digit+ ']'
 
 Element := Char+ ( BoundedAttributeExpression | ArrayIndex )*
+
+Char := !Dot
 ```
 
 The complete grammar for Usages 2 and 3 is:
 
 ```
-Expression := ( ExpressionPiece Dot )+
+Expression := ( ExpressionPiece ( Dot ExpressionPiece )* )
 
 Dot := '.'
 
