@@ -78,9 +78,11 @@ Attribute := ( '@' Char+ )
 
 BoundedAttributeExpression := '[' Attribute '=' Char+ ']'
 
+BoundedAttributeDeclaration := '[' Attribute ']'
+
 ArrayIndex := '[' Digit+ ']'
 
-Element := Char+ ( BoundedAttributeExpression | ArrayIndex )*
+Element := Char+ ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
 
 Char := !Dot
 ```
@@ -98,9 +100,11 @@ Attribute := ( '@' Char+ )
 
 BoundedAttributeExpression := '[' Attribute '=' Char+ ']'
 
+BoundedAttributeDeclaration := '[' Attribute ']'
+
 ArrayIndex := '[' Digit+ ']'
 
-Element := Char+ ( BoundedAttributeExpression | ArrayIndex )*
+Element := Char+ ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
 
 NumberPrefixedElement := ( '$' Digit+ Element )
 
@@ -194,7 +198,11 @@ Example #12: The following will match the second 'tr' of the first 'table' that 
 table[@class=some-class][0].$1tr
 ```
 
+Example #13: The following will match all properties whose key is 'foo' that contains a '@baz-attr' property.
 
+```
+foo[@baz-attr]
+```
 
 # Caveats
 

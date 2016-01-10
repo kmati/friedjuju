@@ -30,8 +30,7 @@ Token.prototype.addChild = function (childToken) {
 
 Token.Literal = 'Literal';
 
-
-var parserUtils = {
+var parserCommonFunctions = {
 	checkMatch: function (str, match, index) {
 		if (index >= str.length) {
 			return undefined;
@@ -47,7 +46,7 @@ var parserUtils = {
 		return undefined;
 	},
 
-	repeat0Plus: function (str, index, productionName) {
+	repeat0Plus: function (str, index, productionName, ctxt) {
 		if (index >= str.length) {
 			return undefined;
 		}
@@ -56,7 +55,7 @@ var parserUtils = {
 		var token = new Token(Token[productionName], '', index);
 
 		while (index < str.length) {
-			ret = this[productionName](str, index);
+			ret = ctxt[productionName](str, index);
 			if (ret) {
 				token.addChild(ret.token);
 				index = ret.newIndex;
@@ -76,14 +75,14 @@ var parserUtils = {
 		}
 	},
 
-	repeat1Plus: function (str, index, productionName) {
+	repeat1Plus: function (str, index, productionName, ctxt) {
 		if (index >= str.length) {
 			return undefined;
 		}
 
 		var originalIndex = index;
 		var token = new Token(Token[productionName], '', index);
-		var ret = this[productionName](str, index);
+		var ret = ctxt[productionName](str, index);
 		if (!ret) {
 			return undefined;
 		}
@@ -92,7 +91,7 @@ var parserUtils = {
 		index = ret.newIndex;
 
 		while (index < str.length) {
-			ret = this[productionName](str, index);
+			ret = ctxt[productionName](str, index);
 			if (ret) {
 				token.addChild(ret.token);
 				index = ret.newIndex;
@@ -106,8 +105,10 @@ var parserUtils = {
 			newIndex: index,
 			token: token
 		}
-	},
+	}
+};
 
+var parserUtils = {
 	// Expression := ( ExpressionPiece ( Dot ExpressionPiece )* )
 	Expression: function (str, index) {
 		if (index >= str.length) {
@@ -171,7 +172,7 @@ var parserUtils = {
 			return undefined;
 		}
 
-		var match = this.checkMatch(str, '.', index);
+		var match = parserCommonFunctions.checkMatch(str, '.', index);
 		if (match) {
 			return {
 				newIndex: match.newIndex,
@@ -188,7 +189,8 @@ var parserUtils = {
 		}
 
 		// This is at the top because it will produce the longest production;
-		// plus it starts with the '$' prefix char
+		// plus it starts with the '$' prefix char which means that it cannot be
+		// an Attribute, Element or StringElement
 		var retNumberPrefixedElement = this.NumberPrefixedElement(str, index);
 		if (retNumberPrefixedElement) {
 			return {
@@ -205,19 +207,19 @@ var parserUtils = {
 			};
 		}
 
-		var retElement = this.Element(str, index);
-		if (retElement) {
-			return {
-				newIndex: retElement.newIndex,
-				token: new Token(Token.ExpressionPiece, retElement.token.value, index, retElement.token)
-			};
-		}
-
 		var retStringElement = this.StringElement(str, index);
 		if (retStringElement) {
 			return {
 				newIndex: retStringElement.newIndex,
 				token: new Token(Token.ExpressionPiece, retStringElement.token.value, index, retStringElement.token)
+			};
+		}
+
+		var retElement = this.Element(str, index);
+		if (retElement) {
+			return {
+				newIndex: retElement.newIndex,
+				token: new Token(Token.ExpressionPiece, retElement.token.value, index, retElement.token)
 			};
 		}
 
@@ -231,10 +233,10 @@ var parserUtils = {
 		}
 
 		var originalIndex = index;
-		var matchAttrPrefix = this.checkMatch(str, '@', index);
+		var matchAttrPrefix = parserCommonFunctions.checkMatch(str, '@', index);
 		if (matchAttrPrefix) {
 			index = matchAttrPrefix.newIndex;
-			var retUsage1Chars = this.repeat1Plus(str, index, 'Usage1Char');
+			var retUsage1Chars = parserCommonFunctions.repeat1Plus(str, index, 'Usage1Char', this);
 			if (retUsage1Chars) {
 				index = retUsage1Chars.newIndex;
 				return {
@@ -257,7 +259,7 @@ var parserUtils = {
 		}
 
 		var originalIndex = index;
-		var retUsage1Chars = this.repeat1Plus(str, index, 'Usage1Char');
+		var retUsage1Chars = parserCommonFunctions.repeat1Plus(str, index, 'Usage1Char', this);
 		if (retUsage1Chars) {
 			return {
 				newIndex: retUsage1Chars.newIndex,
@@ -277,16 +279,14 @@ var parserUtils = {
 		var originalIndex = index;
 		var token = new Token(Token.NumberPrefixedElement, '', index);
 
-		var tokenKids = [];
-
 		// '$'
-		var matchDollarPrefix = this.checkMatch(str, '$', index);
+		var matchDollarPrefix = parserCommonFunctions.checkMatch(str, '$', index);
 		if (matchDollarPrefix) {
 			token.addChild(matchDollarPrefix.token);
 			index = matchDollarPrefix.newIndex;
 			
 			// Digit+
-			var retDigits = this.repeat1Plus(str, index, 'Digit');
+			var retDigits = parserCommonFunctions.repeat1Plus(str, index, 'Digit', this);
 			if (retDigits) {
 				token.addChild(retDigits.token);
 				index = retDigits.newIndex;
@@ -315,7 +315,7 @@ var parserUtils = {
 			return undefined;
 		}
 
-		var match = this.checkMatch(str, '$str', index);
+		var match = parserCommonFunctions.checkMatch(str, '$str', index);
 		if (match) {
 			return {
 				newIndex: match.newIndex,
@@ -331,10 +331,8 @@ var parserUtils = {
 			return undefined;
 		}
 
-		var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-		for (var c = 0; c < arr.length; c++) {
-			var num = arr[c];
-			var match = this.checkMatch(str, num.toString(), index);
+		for (var num = 0; num <= 9; num++) {
+			var match = parserCommonFunctions.checkMatch(str, num.toString(), index);
 			if (match) {
 				return {
 					newIndex: match.newIndex,
@@ -376,7 +374,7 @@ var parserUtils = {
 			return undefined;
 		}
 
-		var match = this.checkMatch(str, '*', index);
+		var match = parserCommonFunctions.checkMatch(str, '*', index);
 		if (match) {
 			return {
 				newIndex: match.newIndex,
@@ -392,7 +390,7 @@ var parserUtils = {
 			return undefined;
 		}
 
-		var match = this.checkMatch(str, '?', index);
+		var match = parserCommonFunctions.checkMatch(str, '?', index);
 		if (match) {
 			return {
 				newIndex: match.newIndex,
@@ -403,13 +401,243 @@ var parserUtils = {
 	}
 };
 
-// this is here to add the declarations of static token enums:
-// e.g. Token.Dot
+// parserUtilsExtended will contain the following new and overridden methods.
+// 
+var parserUtilsExtended = {
+	// Override
+	// Attribute := ( '@' Char+ )
+	Attribute: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var matchAttrPrefix = parserCommonFunctions.checkMatch(str, '@', index);
+		if (matchAttrPrefix) {
+			index = matchAttrPrefix.newIndex;
+			var retChars = parserCommonFunctions.repeat1Plus(str, index, 'Char', this);
+			if (retChars) {
+				index = retChars.newIndex;
+				return {
+					newIndex: retChars.newIndex,
+					token: new Token(Token.Attribute, str.substr(originalIndex, index), originalIndex, [
+						matchAttrPrefix.token,
+						retChars.token
+					])
+				};
+			}
+		}
+
+		return undefined;
+	},
+
+	// BoundedAttributeExpression := '[' Attribute '=' Char+ ']'
+	BoundedAttributeExpression: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.BoundedAttributeExpression, '', index);
+
+		var matchBracketOpen = parserCommonFunctions.checkMatch(str, '[', index);
+		if (matchBracketOpen) {
+			index = matchBracketOpen.newIndex;
+			token.addChild(matchBracketOpen.token);
+
+			var retAttribute = this.Attribute(str, index);
+			if (retAttribute) {
+				index = retAttribute.newIndex;
+				token.addChild(retAttribute.token);
+
+				var matchEq = parserCommonFunctions.checkMatch(str, '=', index);
+				if (matchEq) {
+					index = matchEq.newIndex;
+					token.addChild(matchEq.token);
+
+					var retChars = parserCommonFunctions.repeat1Plus(str, index, 'Char', this);
+					if (retChars) {
+						index = retChars.newIndex;
+						token.addChild(retChars.token);
+
+						var matchBracketClose = parserCommonFunctions.checkMatch(str, ']', index);
+						if (matchBracketClose) {
+							index = matchBracketClose.newIndex;
+							token.addChild(matchBracketClose.token);
+	
+							token.value = str.substring(originalIndex, index);
+							return {
+								newIndex: index,
+								token: token
+							};
+						}
+					}
+				}
+			}
+		}
+
+		return undefined;
+	},
+
+	// BoundedAttributeDeclaration := '[' Attribute ']'
+	BoundedAttributeDeclaration: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.BoundedAttributeExpression, '', index);
+
+		var matchBracketOpen = parserCommonFunctions.checkMatch(str, '[', index);
+		if (matchBracketOpen) {
+			index = matchBracketOpen.newIndex;
+			token.addChild(matchBracketOpen.token);
+
+			var retAttribute = this.Attribute(str, index);
+			if (retAttribute) {
+				index = retAttribute.newIndex;
+				token.addChild(retAttribute.token);
+
+
+				token.value = str.substring(originalIndex, index);
+				return {
+					newIndex: index,
+					token: token
+				};
+			}
+		}
+
+		return undefined;
+	},
+
+	// ArrayIndex := '[' Digit+ ']'
+	ArrayIndex: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.BoundedAttributeExpression, '', index);
+
+		var matchBracketOpen = parserCommonFunctions.checkMatch(str, '[', index);
+		if (matchBracketOpen) {
+			index = matchBracketOpen.newIndex;
+			token.addChild(matchBracketOpen.token);
+
+			var retDigits = parserCommonFunctions.repeat1Plus(str, index, 'Digit', this);
+			if (retDigits) {
+				index = retDigits.newIndex;
+				token.addChild(retDigits.token);
+
+				var matchBracketClose = parserCommonFunctions.checkMatch(str, ']', index);
+				if (matchBracketClose) {
+					index = matchBracketClose.newIndex;
+					token.addChild(matchBracketClose.token);
+
+					token.value = str.substring(originalIndex, index);
+					return {
+						newIndex: index,
+						token: token
+					};
+				}
+			}
+		}
+
+		return undefined;
+	},
+
+	// Override
+	// Element := Char+ ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
+	Element: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.BoundedAttributeExpression, '', index);
+
+		var retChars = parserCommonFunctions.repeat1Plus(str, index, 'Char', this);
+		if (retChars) {
+			index = retChars.newIndex;
+			token.addChild(retChars.token);
+
+			while (index < str.length) {
+				var tempToken, tempNewIndex;
+				var retBoundedAttributeExpression = this.BoundedAttributeExpression(str, index);
+				if (retBoundedAttributeExpression) {
+					tempToken = retBoundedAttributeExpression.token;
+					tempNewIndex = retBoundedAttributeExpression.newIndex;
+				}
+
+				var retBoundedAttributeDeclaration = this.BoundedAttributeDeclaration(str, index);
+				if (retBoundedAttributeDeclaration) {
+					if (tempNewIndex < retBoundedAttributeDeclaration.newIndex) {
+						tempToken = retBoundedAttributeDeclaration.token;
+						tempNewIndex = retBoundedAttributeDeclaration.newIndex;
+					}
+				}
+
+				var retArrayIndex = this.ArrayIndex(str, index);
+				if (retArrayIndex) {
+					if (tempNewIndex < retArrayIndex.newIndex) {
+						tempToken = retArrayIndex.token;
+						tempNewIndex = retArrayIndex.newIndex;
+					}
+				}
+
+				if (tempToken) {
+					index = tempNewIndex;
+					token.addChild(tempToken);
+				} else {
+					break;
+				}
+			}
+		} else {
+			return undefined;
+		}
+
+		token.value = str.substring(originalIndex, index);
+		return {
+			newIndex: index,
+			token: token
+		};
+	},
+
+	// Override
+	// Char := !Dot
+	Char: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var ret = this.Dot(str, index);
+		if (ret) {
+			return undefined;
+		}
+
+		return {
+			newIndex: index + 1,
+			token: new Token(Token.Usage1Char, str.substr(index, 1), index)
+		}
+	}
+};
+
+// now copy over the common methods that are not overridden from parserUtils to parserUtilsExtended
 for (var key in parserUtils) {
-	if (key !== 'checkMatch' && key !== 'repeat0Plus' && key !== 'repeat1Plus') {
-		Token[key] = key;
+	if (key !== 'Attribute' && key !== 'Element' &&
+		key !== 'Usage1Char') {
+		// this is a non-overridden method, so copy it over
+		// we also exclude Usage1Char because it is not needed in parserUtilsExtended
+		parserUtilsExtended[key] = parserUtils[key];
 	}
 }
+
+// this is here to add the declarations of static token enums:
+// e.g. Token.Dot
+for (var key in parserUtilsExtended) {
+	Token[key] = key;
+}
+
 
 var parser = {
 	// Parses a string according to the extended grammar (Usages 2 and 3)
@@ -423,15 +651,18 @@ var parser = {
 		ExpressionPiece := Attribute | Element | NumberPrefixedElement | StringElement
 		Attribute := ( '@' Char+ )
 		BoundedAttributeExpression := '[' Attribute '=' Char+ ']'
+		BoundedAttributeDeclaration := '[' Attribute ']'
 		ArrayIndex := '[' Digit+ ']'
-		Element := Char+ ( BoundedAttributeExpression | ArrayIndex )*
+		Element := Char+ ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
 		NumberPrefixedElement := ( '$' Digit+ Element )
 		StringElement := '$str'
 		Digit := ( '0' - '9' )
 		Char := !Dot
 	 */	 
 	parseExtended: function (str) {
-
+		var index = 0;
+		var tokenExpression = parserUtilsExtended.Expression(str, index);
+		return tokenExpression;
 	},
 
 	// Parses a string according to the restricted grammar (Usage 1 only)
@@ -454,9 +685,7 @@ var parser = {
 	 */
 	parseRestricted: function (str) {
 		var index = 0;
-
 		var tokenExpression = parserUtils.Expression(str, index);
-
 		return tokenExpression;
 	}
 };
