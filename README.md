@@ -103,19 +103,19 @@ Based on the JavaScript code snippet above, the output to the console will be:
 ```
 The result is:
 <molecule id="funmole">
-  <uses>Industrial</uses>
-  <uses>Marketing</uses>
   <atomicWeight>2</atomicWeight>
-  <uses>
-    <balloons>true</balloons>
-    <bouncyHouses>false</bouncyHouses>
-  </uses>
   <name>Helium</name>
   <type>
     <Period>1</Period>
     <state>gas</state>
     <volatility>stable</volatility>
   </type>
+  <uses>Industrial</uses>
+  <uses>Marketing</uses>
+  <uses>
+    <balloons>true</balloons>
+    <bouncyHouses>false</bouncyHouses>
+  </uses>
 </molecule>
 ```
 
@@ -166,3 +166,8 @@ The following rules specify how the JSON is transformed into markup:
 4. $str is a property whose value is plain text
 5. Arrays are used to replicate elements with a single tagName specified by the property that owns the array, e.g. tr: [ ... ] will create multiple <tr> elements
 6. You can use dot expressions in the property names as a shorthand notation. The elements will be recursively created.
+
+
+# Other Docs
+
+Check out the other docs in the ideas directory. They explain other aspects of the j2m system in more detail.
