@@ -32,13 +32,15 @@ The grammar below conforms to these simple rules:
 1. Left hand terms are the names of the productions.
 2. Right hand terms are the items that the productions evaluate to.
 3. The grammar productions are declared as: Left hand term := Right hand term
-4. The ! character is used to express that any character will match EXCEPT FOR the succeeding item, i.e. !Dot means that all characters are valid except for Dot.
-5. The | character is used to signify a logical OR between terms, i.e. A := B | C | D means that A evaluates to B or A evaluates to C or A evaluates to D.
-6. The & character is used to signify a logical AND between terms. This is typically used with the ! (see rule #4 above), e.g. A := !B & !C & !D which means that A cannot evaluate to B, C or D, i.e. A can be anything else.
-7. The single quote character is used to bound literal text, i.e. '@' is interpreted as the literal @ character.
-8. The + character is used to express that the preceding item is to occur 1 or more times, i.e. A+ means that the A production must occur 1 or more times, or 'x'+ means that the x character must occur 1 or more times.
-9. The * character is used to express that the preceding item is to occur 0 or more times, i.e. A* means that the A production may occur 0 or more times, or 'x'* means that the x character may occur 0 or more times.
-10. The ? character is used to express that the preceding item may occur 0 or 1 time only, i.e. A? means that the A production may occur 0 or once, or 'x'? means that the x character may occur 0 or once.
+4. Right hand terms can be grouped using parentheses, i.e. ( ... ), where the ellipsis is replaced by actual terms.
+5. Literals may only appear as Right hand terms and must be contained within single quotes, i.e. '...', where the ellipsis is replaced by actual literal text.
+6. The ! character is used to express that any character will match EXCEPT FOR the succeeding item, i.e. !Dot means that all characters are valid except for Dot.
+7. The | character is used to signify a logical OR between terms, i.e. A := B | C | D means that A evaluates to B or A evaluates to C or A evaluates to D.
+8. The & character is used to signify a logical AND between terms. This is typically used with the ! (see rule #4 above), e.g. A := !B & !C & !D which means that A cannot evaluate to B, C or D, i.e. A can be anything else.
+9. The single quote character is used to bound literal text, i.e. '@' is interpreted as the literal @ character.
+10. The + character is used to express that the preceding item is to occur 1 or more times, i.e. A+ means that the A production must occur 1 or more times, or 'x'+ means that the x character must occur 1 or more times.
+11. The * character is used to express that the preceding item is to occur 0 or more times, i.e. A* means that the A production may occur 0 or more times, or 'x'* means that the x character may occur 0 or more times.
+12. The ? character is used to express that the preceding item may occur 0 or 1 time only, i.e. A? means that the A production may occur 0 or once, or 'x'? means that the x character may occur 0 or once.
 
 
 *Dot Expression Grammar for Usage 1 (see below)*
@@ -227,4 +229,4 @@ It is obvious that these expressions will be useful for quick referencing of sub
 F + O -> R
 ```
 
-That, however, is outside the scope of the expressions.
+The implementation of F would traverse O to produce R. That, however, lies outside the scope of the expressions.
