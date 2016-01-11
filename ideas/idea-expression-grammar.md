@@ -62,7 +62,7 @@ StringElement := '$str'
 
 Digit := ( '0' - '9' )
 
-Usage1Char := ( !Dot & !Wildcard & !SingleObjectPlaceholder )
+Usage1Char := ( !Dot & !Wildcard & !SingleObjectPlaceholder & !'=' & !'@' & !'[' & !']')
 
 Wildcard := '*'
 
@@ -84,7 +84,7 @@ ArrayIndex := '[' Digit+ ']'
 
 Element := Char+ ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
 
-Char := !Dot
+Char := ( !Dot & !'=' & !'@' & !'[' & !']')
 ```
 
 The complete grammar for Usages 2 and 3 is:
@@ -112,7 +112,7 @@ StringElement := '$str'
 
 Digit := ( '0' - '9' )
 
-Char := !Dot
+Char := ( !Dot & !'=' & !'@' )
 ```
 
 # Examples of Valid Expressions
