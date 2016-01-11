@@ -560,7 +560,7 @@ var parserUtilsExtended = {
 	},
 
 	// Override
-	// Element := Char+ ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
+	// Element := ElementName ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
 	Element: function (str, index) {
 		if (index >= str.length) {
 			return undefined;
@@ -569,10 +569,10 @@ var parserUtilsExtended = {
 		var originalIndex = index;
 		var token = new Token(Token.Element, '', index);
 
-		var retChars = parserCommonFunctions.repeat1Plus(str, index, 'Char', this);
-		if (retChars) {
-			index = retChars.newIndex;
-			token.addChild(retChars.token);
+		var retElementName = this.ElementName(str, index);
+		if (retElementName) {
+			index = retElementName.newIndex;
+			token.addChild(retElementName.token);
 
 			while (index < str.length) {
 				var tempToken = undefined, tempNewIndex = -1;
@@ -605,6 +605,30 @@ var parserUtilsExtended = {
 					break;
 				}
 			}
+		} else {
+			return undefined;
+		}
+
+		token.value = str.substring(originalIndex, index);
+		return {
+			newIndex: index,
+			token: token
+		};
+	},
+
+	// ElementName := Char+
+	ElementName: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.ElementName, '', index);
+
+		var retChars = parserCommonFunctions.repeat1Plus(str, index, 'Char', this);
+		if (retChars) {
+			index = retChars.newIndex;
+			token.addChild(retChars.token);
 		} else {
 			return undefined;
 		}
@@ -682,7 +706,8 @@ var parser = {
 		BoundedAttributeExpression := '[' Attribute '=' Char+ ']'
 		BoundedAttributeDeclaration := '[' Attribute ']'
 		ArrayIndex := '[' Digit+ ']'
-		Element := Char+ ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
+		Element := ElementName ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
+		ElementName := Char+
 		NumberPrefixedElement := ( '$' Digit+ Element )
 		StringElement := '$str'
 		Digit := ( '0' - '9' )

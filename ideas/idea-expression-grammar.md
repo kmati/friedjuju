@@ -82,7 +82,9 @@ BoundedAttributeDeclaration := '[' Attribute ']'
 
 ArrayIndex := '[' Digit+ ']'
 
-Element := Char+ ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
+Element := ElementName ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
+
+ElementName := Char+
 
 Char := ( !Dot & !'=' & !'@' & !'[' & !']')
 ```
@@ -104,7 +106,9 @@ BoundedAttributeDeclaration := '[' Attribute ']'
 
 ArrayIndex := '[' Digit+ ']'
 
-Element := Char+ ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
+Element := ElementName ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
+
+ElementName := Char+
 
 NumberPrefixedElement := ( '$' Digit+ Element )
 
