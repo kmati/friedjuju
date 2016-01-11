@@ -109,7 +109,7 @@ var parserCommonFunctions = {
 
 	or: function (str, index, productionNameArray, ctxt, tokenToBeReturned) {
 		var originalIndex = index;
-		var tempToken, tempNewIndex = -1;
+		var tempToken = undefined, tempNewIndex = -1;
 		for (var c = 0; c < productionNameArray.length; c++) {
 			var productionName = productionNameArray[c];
 	
@@ -212,14 +212,14 @@ var parserUtilsRestricted = {
 		return undefined;
 	},
 
-	// ExpressionPiece := Attribute | Element | NumberPrefixedElement | StringElement
+	// ExpressionPiece := NumberPrefixedElement | Attribute | Element | StringElement
 	ExpressionPiece: function (str, index) {
 		if (index >= str.length) {
 			return undefined;
 		}
 
 		return parserCommonFunctions.or(str, index, 
-			['Attribute', 'Element', 'NumberPrefixedElement', 'StringElement'],
+			['NumberPrefixedElement', 'Attribute', 'Element', 'StringElement'],
 			this, 'ExpressionPiece');
 	},
 
@@ -575,7 +575,7 @@ var parserUtilsExtended = {
 			token.addChild(retChars.token);
 
 			while (index < str.length) {
-				var tempToken, tempNewIndex = -1;
+				var tempToken = undefined, tempNewIndex = -1;
 				var retBoundedAttributeExpression = this.BoundedAttributeExpression(str, index);
 				if (retBoundedAttributeExpression) {
 					tempToken = retBoundedAttributeExpression.token;
@@ -677,7 +677,7 @@ var parser = {
 
 		Expression := ( ExpressionPiece ( Dot ExpressionPiece )* )
 		Dot := '.'
-		ExpressionPiece := Attribute | Element | NumberPrefixedElement | StringElement
+		ExpressionPiece := NumberPrefixedElement | Attribute | Element | StringElement
 		Attribute := ( '@' Char+ )
 		BoundedAttributeExpression := '[' Attribute '=' Char+ ']'
 		BoundedAttributeDeclaration := '[' Attribute ']'
@@ -705,7 +705,7 @@ var parser = {
 
 		Expression := ( ExpressionPiece ( Dot ExpressionPiece )* )
 		Dot := '.'
-		ExpressionPiece := Attribute | Element | NumberPrefixedElement | StringElement
+		ExpressionPiece := NumberPrefixedElement | Attribute | Element | StringElement
 		Attribute := ( '@' Usage1Char+ )
 		Element := Usage1Char+
 		NumberPrefixedElement := ( '$' Digit+ Element )

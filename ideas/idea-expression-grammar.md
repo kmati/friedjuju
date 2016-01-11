@@ -50,7 +50,7 @@ Expression := ( ExpressionPiece ( Dot ExpressionPiece )* )
 
 Dot := '.'
 
-ExpressionPiece := Attribute | Element | NumberPrefixedElement | StringElement
+ExpressionPiece := NumberPrefixedElement | Attribute | Element | StringElement
 
 Attribute := ( '@' Usage1Char+ )
 
@@ -94,7 +94,7 @@ Expression := ( ExpressionPiece ( Dot ExpressionPiece )* )
 
 Dot := '.'
 
-ExpressionPiece := Attribute | Element | NumberPrefixedElement | StringElement
+ExpressionPiece := NumberPrefixedElement | Attribute | Element | StringElement
 
 Attribute := ( '@' Char+ )
 
@@ -112,7 +112,7 @@ StringElement := '$str'
 
 Digit := ( '0' - '9' )
 
-Char := ( !Dot & !'=' & !'@' )
+Char := ( !Dot & !'=' & !'@' & !'[' & !']')
 ```
 
 # Examples of Valid Expressions
