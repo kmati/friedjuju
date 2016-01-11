@@ -12,7 +12,6 @@ for (var key in parserUtilsExtended) {
 	Token[key] = key;
 }
 
-
 var parser = {
 	// Parses a string according to the extended grammar (Usages 2 and 3)
 	// str: The string to parse

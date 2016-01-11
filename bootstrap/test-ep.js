@@ -9,6 +9,7 @@ var ep = require('../src/expression-parser/ep.js');
 // x[@class=far][0].$4car
 
 
-var tokenTable = ep.parseExtended('table[@class=some-class][0].$1tr');
+var tokenTable = ep.parseRestricted('table');
+//var tokenTable = ep.parseExtended('table[@class=some-class][0].$1tr');
 //var tokenTable = ep.parseExtended('x[@class=far][0].$4car');
 console.log('tokenTable = ' + JSON.stringify(tokenTable, undefined, 2));
