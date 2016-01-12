@@ -220,7 +220,7 @@ This is because 'Hello World!' is the value of the second <tr> element and 'Mess
 
 **Syntax for dot expressions:**
 
-Details about the syntax of the dot expressions can be found in the ```ideas/idea-expression-grammar.md``` document. Read the sections describing Usage 1.
+Details about the syntax of the dot expressions can be found in the [ideas/idea-expression-grammar.md](ideas/idea-expression-grammar.md "A Full(ish) Description of the Expression Grammar") document. Read the sections describing Usage 1.
 
 
 # Gotcha: No top-level attribute declarations
@@ -270,3 +270,8 @@ The following rules specify how the JSON is transformed into markup:
 # Other Docs
 
 Check out the other docs in the ideas directory. They explain other aspects of the j2m system in more detail.
+
+* [ideas/idea-map-to-ui.md](ideas/idea-map-to-ui.md) => A description of mapping JSON to markup
+* [ideas/idea-expression-grammar.md](ideas/idea-expression-grammar.md) => A description of the expression grammar
+* [ideas/idea-json-transforms.md](ideas/idea-json-transforms.md) => A description of transforming JSON from one structure to another
+
