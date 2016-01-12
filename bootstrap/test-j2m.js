@@ -1,5 +1,5 @@
-//var j2m = require('../bin/release/j2m-0.0.1.js');
-var j2m = require('../src/json-to-markup/j2m.js');
+var j2m = require('../bin/release/j2m-0.0.1.js');
+//var j2m = require('../src/json-to-markup/j2m.js');
 
 var obj = {
 	'table.$1tr.td': 'Hello World!',
