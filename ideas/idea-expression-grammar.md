@@ -74,6 +74,8 @@ SingleObjectPlaceholder := '?'
 There are changes to the Grammar for Usage 1 that need to be made to support Usages 2 and 3. The changes are:
 
 ```
+ExpressionPiece := Wildcard | NumberPrefixedElement | Attribute | Element | StringElement
+
 Attribute := ( '@' Char+ )
 
 BoundedAttributeExpression := '[' Attribute '=' Char+ ']'
@@ -86,7 +88,9 @@ Element := ElementName ( BoundedAttributeExpression | BoundedAttributeDeclaratio
 
 ElementName := Char+
 
-Char := ( !Dot & !'=' & !'@' & !'[' & !']')
+Char := ( !Dot & !'=' & !'@' & !'[' & !']' & !Wildcard)
+
+Wildcard := '*'
 ```
 
 The complete grammar for Usages 2 and 3 is:
@@ -96,7 +100,7 @@ Expression := ( ExpressionPiece ( Dot ExpressionPiece )* )
 
 Dot := '.'
 
-ExpressionPiece := NumberPrefixedElement | Attribute | Element | StringElement
+ExpressionPiece := Wildcard | NumberPrefixedElement | Attribute | Element | StringElement
 
 Attribute := ( '@' Char+ )
 
@@ -116,7 +120,9 @@ StringElement := '$str'
 
 Digit := ( '0' - '9' )
 
-Char := ( !Dot & !'=' & !'@' & !'[' & !']')
+Char := ( !Dot & !'=' & !'@' & !'[' & !']' & !Wildcard)
+
+Wildcard := '*'
 ```
 
 # Examples of Valid Expressions

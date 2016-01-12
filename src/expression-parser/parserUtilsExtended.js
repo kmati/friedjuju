@@ -7,6 +7,17 @@ var Token = require('./Token.js'),
  * Please note that parserUtilsExtended will contain the following new and overridden methods from parserUtilsRestricted.
  */
 var parserUtilsExtended = {
+	// ExpressionPiece := Wildcard | NumberPrefixedElement | Attribute | Element | StringElement
+	ExpressionPiece: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		return parserCommonFunctions.or(str, index, 
+			['Wildcard', 'NumberPrefixedElement', 'Attribute', 'Element', 'StringElement'],
+			this, 'ExpressionPiece');
+	},
+
 	// Override
 	// Attribute := ( '@' Char+ )
 	Attribute: function (str, index) {
@@ -101,12 +112,17 @@ var parserUtilsExtended = {
 				index = retAttribute.newIndex;
 				token.addChild(retAttribute.token);
 
+				var matchBracketClose = parserCommonFunctions.checkMatch(str, ']', index);
+				if (matchBracketClose) {
+					index = matchBracketClose.newIndex;
+					token.addChild(matchBracketClose.token);
 
-				token.value = str.substring(originalIndex, index);
-				return {
-					newIndex: index,
-					token: token
-				};
+					token.value = str.substring(originalIndex, index);
+					return {
+						newIndex: index,
+						token: token
+					};
+				}
 			}
 		}
 
@@ -231,7 +247,7 @@ var parserUtilsExtended = {
 	},
 
 	// Override
-	// Char := ( !Dot & !'=' & !'@' & !'[' & !']')
+	// Char := ( !Dot & !'=' & !'@' & !'[' & !']' & !Wildcard)
 	Char: function (str, index) {
 		if (index >= str.length) {
 			return undefined;
@@ -257,6 +273,10 @@ var parserUtilsExtended = {
 		if (ret) {
 			return undefined;
 		}
+		ret = this.Wildcard(str, index);
+		if (ret) {
+			return undefined;
+		}
 
 		return {
 			newIndex: index + 1,
@@ -267,10 +287,10 @@ var parserUtilsExtended = {
 
 // now copy over the common methods that are not overridden from parserUtilsRestricted to parserUtilsExtended
 for (var key in parserUtilsRestricted) {
-	if (key !== 'Attribute' && key !== 'Element' &&
-		key !== 'Usage1Char') {
+	if (key !== 'ExpressionPiece' && key !== 'Attribute' && key !== 'Element' &&
+		key !== 'Usage1Char' && key !== 'SingleObjectPlaceholder') {
 		// this is a non-overridden method, so copy it over
-		// we also exclude Usage1Char because it is not needed in parserUtilsExtended
+		// we also exclude Usage1Char and SingleObjectPlaceholder because they are not needed in parserUtilsExtended
 		parserUtilsExtended[key] = parserUtilsRestricted[key];
 	}
 }

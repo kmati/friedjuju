@@ -20,7 +20,7 @@ var parser = {
 
 		Expression := ( ExpressionPiece ( Dot ExpressionPiece )* )
 		Dot := '.'
-		ExpressionPiece := NumberPrefixedElement | Attribute | Element | StringElement
+		ExpressionPiece := Wildcard | NumberPrefixedElement | Attribute | Element | StringElement
 		Attribute := ( '@' Char+ )
 		BoundedAttributeExpression := '[' Attribute '=' Char+ ']'
 		BoundedAttributeDeclaration := '[' Attribute ']'
@@ -30,7 +30,8 @@ var parser = {
 		NumberPrefixedElement := ( '$' Digit+ Element )
 		StringElement := '$str'
 		Digit := ( '0' - '9' )
-		Char := ( !Dot & !'=' & !'@' & !'[' & !']')
+		Char := ( !Dot & !'=' & !'@' & !'[' & !']' & !Wildcard)
+		Wildcard := '*'
 	 */	 
 	parseExtended: function (str) {
 		var index = 0;
