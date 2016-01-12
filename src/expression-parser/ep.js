@@ -2,7 +2,6 @@
  * This module is the parser for the dot expressions used in the j2m system.
  */
 var Token = require('./Token.js'),
-	parserCommonFunctions = require('./parserCommonFunctions.js'),
 	parserUtilsRestricted = require('./parserUtilsRestricted.js'),
 	parserUtilsExtended = require('./parserUtilsExtended.js');
 

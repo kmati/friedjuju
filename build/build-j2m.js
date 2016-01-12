@@ -18,9 +18,12 @@ function createBuilder() {
 	function uglifyString(content) {
 		var ast = uglifyjs.parse(content);
 		ast.figure_out_scope();
+		var compressor = uglifyjs.Compressor();
+		ast = ast.transform(compressor);
+		ast.figure_out_scope();
 		ast.compute_char_frequency();
 		ast.mangle_names();
-		return ast.print_to_string();
+		return ast.print_to_string();		
 	}
 
 	// callback: void function (err)
