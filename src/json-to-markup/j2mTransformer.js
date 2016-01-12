@@ -1,6 +1,7 @@
 require('./String-Extensions.js');
 var Attr = require('./Attr.js'),
-	Element = require('./Element.js');
+	Element = require('./Element.js'),
+	objectGraphCreator = require('./objectGraphCreator');
 
 /* *******************
  * j2mTransformer: Used to perform the JSON to markup transformations.
@@ -52,14 +53,20 @@ var j2mTransformer = {
 			});
 		}
 
-		for (var key in obj) {
-			var val = obj[key];
+		// expand the dot expressions so that we are processing a hierarchical set of objects
+		// instead of the dot notated ones
+		var newObj = objectGraphCreator.expand(obj);
+
+		for (var key in newObj) {
+			var val = newObj[key];
 			if (key.indexOf('.') > -1) {
 				// a dotted expression
 				// e.g. 'table.$1tr.td.@colspan': 2,
-
+				// We should never find a key which is a dot expression since they should all have been
+				// expanded into a hierarchy in the newObj = objectGraphCreator.expand(obj) statement above.
+				throw new Error('Found a dotted expression that was not expanded: ' + key);
 			} else if (key[0] === '@') {
-				// obj is an attribute declaration
+				// newObj is an attribute declaration
 				// e.g. @colspan': 2
 				var attr = j2mTransformer.processAttr(key, val);
 				targetEle.addAttr(attr);

@@ -2,6 +2,8 @@
 var j2m = require('../src/json-to-markup/j2m.js');
 
 var obj = {
+	'table.tr.td': 'Hello World!',
+	'foo.bar': 'Bye World!',
 	molecule: {
 		'@id': 'funmole',
 		atomicWeight: 2,
@@ -17,7 +19,7 @@ var obj = {
 		},
 		'@class': 'some-class',
 		$0uses: ['Industrial', 'Marketing']
-	}
+	},
 };
 
 j2m.prettyPrint = true;
