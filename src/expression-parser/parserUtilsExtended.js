@@ -7,14 +7,14 @@ var Token = require('./Token.js'),
  * Please note that parserUtilsExtended will contain the following new and overridden methods from parserUtilsRestricted.
  */
 var parserUtilsExtended = {
-	// ExpressionPiece := Wildcard | NumberPrefixedElement | Attribute | Element | StringElement
+	// ExpressionPiece := Wildcard | SingleObjectPlaceholder | NumberPrefixedElement | Attribute | Element | StringElement
 	ExpressionPiece: function (str, index) {
 		if (index >= str.length) {
 			return undefined;
 		}
 
 		return parserCommonFunctions.or(str, index, 
-			['Wildcard', 'NumberPrefixedElement', 'Attribute', 'Element', 'StringElement'],
+			['Wildcard', 'SingleObjectPlaceholder', 'NumberPrefixedElement', 'Attribute', 'Element', 'StringElement'],
 			this, 'ExpressionPiece');
 	},
 
@@ -247,7 +247,7 @@ var parserUtilsExtended = {
 	},
 
 	// Override
-	// Char := ( !Dot & !'=' & !'@' & !'[' & !']' & !Wildcard)
+	// Char := ( !Dot & !'=' & !'@' & !'[' & !']' & !Wildcard & !SingleObjectPlaceholder)
 	Char: function (str, index) {
 		if (index >= str.length) {
 			return undefined;
@@ -277,6 +277,10 @@ var parserUtilsExtended = {
 		if (ret) {
 			return undefined;
 		}
+		ret = this.SingleObjectPlaceholder(str, index);
+		if (ret) {
+			return undefined;
+		}
 
 		return {
 			newIndex: index + 1,
@@ -288,9 +292,9 @@ var parserUtilsExtended = {
 // now copy over the common methods that are not overridden from parserUtilsRestricted to parserUtilsExtended
 for (var key in parserUtilsRestricted) {
 	if (key !== 'ExpressionPiece' && key !== 'Attribute' && key !== 'Element' &&
-		key !== 'Usage1Char' && key !== 'SingleObjectPlaceholder') {
+		key !== 'Usage1Char') {
 		// this is a non-overridden method, so copy it over
-		// we also exclude Usage1Char and SingleObjectPlaceholder because they are not needed in parserUtilsExtended
+		// we also exclude Usage1Char because it is not needed in parserUtilsExtended
 		parserUtilsExtended[key] = parserUtilsRestricted[key];
 	}
 }
