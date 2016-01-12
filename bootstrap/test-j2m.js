@@ -2,17 +2,16 @@
 var j2m = require('../src/json-to-markup/j2m.js');
 
 var obj = {
-	'table.tr.td': 'Hello World!',
+	'table.$1tr.td': 'Hello World!',
+	'table.$0tr.td': 'Message:',
 	'foo.bar': 'Bye World!',
 	molecule: {
 		'@id': 'funmole',
 		atomicWeight: 2,
 		name: 'Helium',
-		type: {
-			'Period': 1,
-			'state': 'gas',
-			'volatility': 'stable'
-		},
+		'type.Period': 1,
+		'type.state': 'gas',
+		'type.volatility': 'stable',
 		$1uses: {
 			'balloons': true,
 			'bouncyHouses': false
@@ -20,6 +19,7 @@ var obj = {
 		'@class': 'some-class',
 		$0uses: ['Industrial', 'Marketing']
 	},
+	'math.pi': 3.14
 };
 
 j2m.prettyPrint = true;
