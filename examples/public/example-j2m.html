@@ -1,0 +1,97 @@
+<html>
+	<head>
+		<title>Example - j2m</title>
+		<script type="text/javascript" src="j2m-0.0.1.js"></script>
+		<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css"/>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
+		<link rel="stylesheet" href="examples-static.css"/>
+	</head>
+	<body>
+
+	<h2>Example - j2m</h2>
+
+	<table>
+		<tr>
+			<td valign="top">
+				Enter the JSON here:<br/>
+				<textarea id="json-text">
+{
+	"table": {
+	  "@border": 1,
+	  "tr": [
+	    {
+	      "@style": "background-color: lightgreen",
+	      "th": ["Name", "Age", "Preferences"]
+	    },
+	    {
+	      "td": ["Joe Dudesman", 23, "I like fish"]
+	    },
+	    {
+	      "td": ["Sally Smythe", 24, "I love C++"]
+	    },
+	    {
+	      "td": ["Harris Wise", 27, "I love JS"]
+	    },
+	    {
+	      "td": ["Willy Wonka", 23, "I absolutely love factories!"]
+	    }
+	  ]
+	}
+}
+				</textarea>
+			</td>
+			<td>
+				<input type="checkbox" id="chk-pretty-print" checked="checked" /> Pretty print?
+				<br/>
+				<button id="generate-markup">
+					<i class="fa fa-cog"></i>
+					Generate Markup
+				</button>
+			</td>
+			<td valign="top">
+				Generated markup:<br/>
+				<div id="target-markup"></div>
+				<br/>
+				Raw generated markup:<br/>
+				<textarea id="target-raw-markup"></textarea>
+			</td>
+		</tr>
+	</table>
+
+	<script type="text/javascript">
+		var generator = {
+			init: function () {
+				this.jsonTextArea = document.getElementById('json-text');
+				this.targetMarkupDiv = document.getElementById('target-markup');
+				this.targetRawMarkupTextArea = document.getElementById('target-raw-markup');
+
+				this.chkPrettyPrint = document.getElementById('chk-pretty-print');
+				this.generateMarkup = document.getElementById('generate-markup');
+
+				this.generateMarkup.onclick = function () {
+					generator.clickedGenerateMarkup();
+				}
+			},
+
+			clickedGenerateMarkup: function () {
+				try {
+					var inputJson = this.jsonTextArea.value;
+					var obj = JSON.parse(inputJson);
+					j2m.prettyPrint = this.chkPrettyPrint.checked;
+
+					var result = j2m.execute(obj);
+
+					this.targetMarkupDiv.innerHTML = result;
+					this.targetRawMarkupTextArea.value = result;
+					console.log('The result is:\n' + result);
+				} catch (e) {
+					alert(e);
+				}
+			}
+		};
+
+		generator.init();
+	</script>
+
+	</body>
+</html>

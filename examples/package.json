@@ -1,0 +1,20 @@
+{
+  "name": "friedjuju-examples",
+  "version": "0.0.1",
+  "repository": "https://github.com/kmati/friedjuju",
+  "license": "MIT",
+  "description": "Examples of friedjuju",
+  "homepage": "https://github.com/kmati/friedjuju",
+  "author": {
+    "name": "Kimanzi Mati",
+    "email": "kmati@nocrunchtime.com",
+    "url": "http://www.nocrunchtime.com"
+  },
+  "dependencies": {
+    "express": "*",
+    "body-parser": "*"
+  },
+  "engines": {
+    "node": ">=0.8.0"
+  }
+}

@@ -53,7 +53,7 @@ This will generate the j2m-{version}.js file in the bin/debug or bin/release dir
 For example, to use j2m-0.0.1.js, you would do this:
 
 ```
-<script type="text/javascript" src="path/to/j2m-0.0.1.js"/>
+<script type="text/javascript" src="path/to/j2m-0.0.1.js"></script>
 ```
 
 Please note that if you want to use j2m from node.js rather than from the browser then you have 2 choices:

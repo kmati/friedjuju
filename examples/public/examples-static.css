@@ -1,0 +1,19 @@
+body, textarea {
+  font-family: proxima-nova, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.42857143;
+  color: #333333;
+  background-color: #ffffff;
+}
+
+#json-text,
+#target-raw-markup{
+	min-height: 600px;
+	min-width: 300px;
+}
+
+#target-markup{
+	min-height: 300px;
+	background-color: #eee;
+	border: solid 1px #ccc;
+}
