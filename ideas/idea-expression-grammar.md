@@ -82,13 +82,23 @@ BoundedAttributeExpression := '[' Attribute '=' Char+ ']'
 
 BoundedAttributeDeclaration := '[' Attribute ']'
 
+BoundedElementExpression := '[' ElementName '=' Char+ ']'
+
+BoundedElementDeclaration := '[' ElementName ']'
+
 ArrayIndex := '[' Digit+ ']'
 
-Element := ElementName ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
+Element := ElementName ElementTail?
 
 ElementName := Char+
 
+ElementTail := ( BoundedAttributeExpression | BoundedAttributeDeclaration | BoundedElementExpression | BoundedElementDeclaration | ArrayIndex )+
+
 Char := ( !Dot & !'=' & !'@' & !'[' & !']' & !Wildcard & !SingleObjectPlaceholder )
+
+Wildcard := '*' ElementTail?
+
+SingleObjectPlaceholder := '?' ElementTail?
 ```
 
 The complete grammar for Usages 2 and 3 is:
@@ -106,11 +116,17 @@ BoundedAttributeExpression := '[' Attribute '=' Char+ ']'
 
 BoundedAttributeDeclaration := '[' Attribute ']'
 
+BoundedElementExpression := '[' ElementName '=' Char+ ']'
+
+BoundedElementDeclaration := '[' ElementName ']'
+
 ArrayIndex := '[' Digit+ ']'
 
-Element := ElementName ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
+Element := ElementName ElementTail?
 
 ElementName := Char+
+
+ElementTail := ( BoundedAttributeExpression | BoundedAttributeDeclaration | BoundedElementExpression | BoundedElementDeclaration | ArrayIndex )+
 
 NumberPrefixedElement := ( '$' Digit+ Element )
 
@@ -120,9 +136,9 @@ Digit := ( '0' - '9' )
 
 Char := ( !Dot & !'=' & !'@' & !'[' & !']' & !Wildcard & !SingleObjectPlaceholder )
 
-Wildcard := '*'
+Wildcard := '*' ElementTail?
 
-SingleObjectPlaceholder := '?'
+SingleObjectPlaceholder := '?' ElementTail?
 ```
 
 # Examples of Valid Expressions
@@ -208,10 +224,22 @@ Example #12: The following will match the second 'tr' of the first 'table' that 
 table[@class=some-class][0].$1tr
 ```
 
-Example #13: The following will match all properties whose key is 'foo' that contains a '@baz-attr' property.
+Example #13: The following will match all properties whose key is 'foo' that contain a '@baz-attr' property.
 
 ```
 foo[@baz-attr]
+```
+
+Example #14: The following will match all properties whose key is 'foo' that contain a 'bar' property.
+
+```
+foo[bar]
+```
+
+Example #15: The following will match all properties who key is 'foo' that contain a 'bar' property whose value is 'some-value'
+
+```
+foo[bar=some-value]
 ```
 
 # Caveats

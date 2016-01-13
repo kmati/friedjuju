@@ -24,14 +24,18 @@ var parser = {
 		Attribute := ( '@' Char+ )
 		BoundedAttributeExpression := '[' Attribute '=' Char+ ']'
 		BoundedAttributeDeclaration := '[' Attribute ']'
+		BoundedElementExpression := '[' ElementName '=' Char+ ']'
+		BoundedElementDeclaration := '[' ElementName ']'
 		ArrayIndex := '[' Digit+ ']'
-		Element := ElementName ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
+		Element := ElementName ElementTail?
 		ElementName := Char+
+		ElementTail := ( BoundedAttributeExpression | BoundedAttributeDeclaration | BoundedElementExpression | BoundedElementDeclaration | ArrayIndex )+
 		NumberPrefixedElement := ( '$' Digit+ Element )
 		StringElement := '$str'
 		Digit := ( '0' - '9' )
 		Char := ( !Dot & !'=' & !'@' & !'[' & !']' & !Wildcard)
-		Wildcard := '*'
+		Wildcard := '*' ElementTail?
+		SingleObjectPlaceholder := '?' ElementTail?
 	 */	 
 	parseExtended: function (str) {
 		var index = 0;
