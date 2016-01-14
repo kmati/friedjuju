@@ -1,6 +1,6 @@
 require('./String-Extensions.js');
-var Attr = require('./Attr.js'),
-	Element = require('./Element.js'),
+var Attr = require('../expression-parser/Attr.js'),
+	Element = require('../expression-parser/Element.js'),
 	objectGraphCreator = require('./objectGraphCreator');
 
 /* *******************

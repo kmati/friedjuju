@@ -278,5 +278,5 @@ Check out the other docs in the ideas directory. They explain other aspects of t
 
 # Examples
 
-You can access the examples via the small expressjs web app in the examples directory. Simply go to [examples/README.md](examples/README.md) and click on any example.
+You can access the examples via the small expressjs web app in the examples directory. Simply go to [examples/](examples/) and click on any example.
 
