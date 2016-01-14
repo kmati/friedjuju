@@ -1,15 +1,28 @@
-body, textarea {
+body{
+	padding: 5px 5px 5px 5px;
+}
+
+body, textarea, table, td {
   font-family: proxima-nova, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 14px;
+  font-size: 10pt;
   line-height: 1.42857143;
   color: #333333;
   background-color: #ffffff;
 }
 
-#json-text,
-#target-raw-markup{
-	min-height: 600px;
+th, td{
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+#json-text{
+	min-height: 300px;
 	min-width: 300px;
+}
+
+#target-raw-markup{
+	min-height: 200px;
+	min-width: 100%;
 }
 
 #target-markup{

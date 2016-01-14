@@ -4,10 +4,11 @@
 		<script type="text/javascript" src="j2m-0.0.1.js"></script>
 		<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css"/>
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
-		<link rel="stylesheet" href="examples-static.css"/>
+		<link rel="stylesheet" href="examples.css"/>
 	</head>
 	<body>
 
+	<a href="/">Examples Main</a><br/>
 	<h2>Example - j2m dotted expressions</h2>
 
 	<table>
@@ -26,7 +27,8 @@
 				</textarea>
 			</td>
 			<td>
-				<input type="checkbox" id="chk-pretty-print" checked="checked" /> Pretty print?
+				<input type="checkbox" id="chk-pretty-print" checked="checked" />
+				<label id="lbl-pretty-print">Pretty print?</label>
 				<br/>
 				<button id="generate-markup">
 					<i class="fa fa-cog"></i>
@@ -36,12 +38,12 @@
 			<td valign="top">
 				Generated markup:<br/>
 				<div id="target-markup"></div>
-				<br/>
-				Raw generated markup:<br/>
-				<textarea id="target-raw-markup"></textarea>
 			</td>
 		</tr>
 	</table>
+	<br/>
+	Raw generated markup:<br/>
+	<textarea id="target-raw-markup"></textarea>
 
 	<script type="text/javascript">
 		var generator = {
@@ -51,10 +53,15 @@
 				this.targetRawMarkupTextArea = document.getElementById('target-raw-markup');
 
 				this.chkPrettyPrint = document.getElementById('chk-pretty-print');
+				this.lblPrettyPrint = document.getElementById('lbl-pretty-print');
 				this.generateMarkup = document.getElementById('generate-markup');
 
 				this.generateMarkup.onclick = function () {
 					generator.clickedGenerateMarkup();
+				}
+
+				this.lblPrettyPrint.onclick = function () {
+					generator.chkPrettyPrint.checked = !generator.chkPrettyPrint.checked;
 				}
 			},
 
