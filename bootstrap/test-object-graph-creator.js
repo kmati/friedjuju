@@ -40,8 +40,15 @@ var objectGraphCreator = require('../src/json-to-markup/objectGraphCreator');
 // };
 
 var obj2 = {
+	baz: {
+		y: "Hi"
+	},
 	'table.$0tr.td': ['Hydrogen', 'Helium'],
-	'table.$0tr.$0td.@style': 'color: red'
+	'table.$0tr.$0td.@style': 'color: red',
+	foo: {
+		x: 4
+	},
+	'$0foo.x': 5
 };
 
 for (var key in obj2) {

@@ -69,8 +69,12 @@ var objectGraphCreator = {
 	// obj: The object
 	// Returns: The modified object
 	expand: function (obj) {
+		var cachedObjProperties = {};
 		var pairs = [];
 		for (var key in obj) {
+			// cache the property
+			cachedObjProperties[key] = obj[key];
+
 			if (key.indexOf('.') > -1) {
 				var val = obj[key];
 
@@ -103,6 +107,11 @@ var objectGraphCreator = {
 			// delete the newly added key from the original object!
 			delete obj[pair.keyToAdd];			
 		});
+
+		// restore properties of obj that were cached
+		for (var key in cachedObjProperties) {
+			obj[key] = cachedObjProperties[key];
+		}
 
 		return newObj;
 	}

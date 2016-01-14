@@ -226,7 +226,7 @@ var expressionQuery = {
 	// Queries an object graph using an expression
 	// expr: The expression
 	// obj: The object graph
-	// Returns: The match if found, else undefined
+	// Returns: The matches if found, else undefined
 	query: function (expr, obj) {
 		var tokenRootExpr = ep.parseExtended(expr);
 

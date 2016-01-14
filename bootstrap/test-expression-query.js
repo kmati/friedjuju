@@ -1,7 +1,7 @@
 /*
  * This script tests the expressionQuery module.
  */
-var expressionQuery = require('../src/expression-matching/expressionQuery.js');
+var expressionQuery = require('../src/json-to-json/expressionQuery.js');
 
 var obj = {
 	people: [
