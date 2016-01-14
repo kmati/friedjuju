@@ -275,3 +275,8 @@ Check out the other docs in the ideas directory. They explain other aspects of t
 * [ideas/idea-expression-grammar.md](ideas/idea-expression-grammar.md) => A description of the expression grammar
 * [ideas/idea-json-transforms.md](ideas/idea-json-transforms.md) => A description of transforming JSON from one structure to another
 
+
+# Examples
+
+You can access the examples via the small expressjs web app in the examples directory. Simply go to [examples/README.md](examples/README.md) and click on any example.
+
