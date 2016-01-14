@@ -18,25 +18,30 @@ var objectGraphCreator = require('../src/json-to-markup/objectGraphCreator');
 // 	}
 // };
 
+// var obj2 = {
+// 	'table.tr.td': 'Hello World!',
+// 	'foo.bar': 'Bye World!',
+// 	molecule: {
+// 		'@id': 'funmole',
+// 		atomicWeight: 2,
+// 		name: 'Helium',
+// 		type: {
+// 			'Period': 1,
+// 			'state': 'gas',
+// 			'volatility': 'stable'
+// 		},
+// 		$1uses: {
+// 			'balloons': true,
+// 			'bouncyHouses': false
+// 		},
+// 		'@class': 'some-class',
+// 		$0uses: ['Industrial', 'Marketing']
+// 	},
+// };
+
 var obj2 = {
-	'table.tr.td': 'Hello World!',
-	'foo.bar': 'Bye World!',
-	molecule: {
-		'@id': 'funmole',
-		atomicWeight: 2,
-		name: 'Helium',
-		type: {
-			'Period': 1,
-			'state': 'gas',
-			'volatility': 'stable'
-		},
-		$1uses: {
-			'balloons': true,
-			'bouncyHouses': false
-		},
-		'@class': 'some-class',
-		$0uses: ['Industrial', 'Marketing']
-	},
+	'table.$0tr.td': ['Hydrogen', 'Helium'],
+	'table.$0tr.$0td.@style': 'color: red'
 };
 
 for (var key in obj2) {

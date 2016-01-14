@@ -144,17 +144,22 @@ var parser = {
 
 		Expression := ( ExpressionPiece ( Dot ExpressionPiece )* )
 		Dot := '.'
-		ExpressionPiece := NumberPrefixedElement | Attribute | Element | StringElement
+		ExpressionPiece := Wildcard | NumberPrefixedElement | Attribute | Element | StringElement
 		Attribute := ( '@' Char+ )
 		BoundedAttributeExpression := '[' Attribute '=' Char+ ']'
 		BoundedAttributeDeclaration := '[' Attribute ']'
+		BoundedElementExpression := '[' ElementName '=' Char+ ']'
+		BoundedElementDeclaration := '[' ElementName ']'
 		ArrayIndex := '[' Digit+ ']'
-		Element := ElementName ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
+		Element := ElementName ElementTail?
 		ElementName := Char+
+		ElementTail := ( BoundedAttributeExpression | BoundedAttributeDeclaration | BoundedElementExpression | BoundedElementDeclaration | ArrayIndex )+
 		NumberPrefixedElement := ( '$' Digit+ Element )
 		StringElement := '$str'
 		Digit := ( '0' - '9' )
-		Char := ( !Dot & !'=' & !'@' & !'[' & !']')
+		Char := ( !Dot & !'=' & !'@' & !'[' & !']' & !Wildcard)
+		Wildcard := '*' ElementTail?
+		SingleObjectPlaceholder := '?' ElementTail?
 	 */	 
 	parseExtended: function (str) {
 		var index = 0;
@@ -349,6 +354,17 @@ var Token = require('./Token.js'),
  * Please note that parserUtilsExtended will contain the following new and overridden methods from parserUtilsRestricted.
  */
 var parserUtilsExtended = {
+	// ExpressionPiece := Wildcard | SingleObjectPlaceholder | NumberPrefixedElement | Attribute | Element | StringElement
+	ExpressionPiece: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		return parserCommonFunctions.or(str, index, 
+			['Wildcard', 'SingleObjectPlaceholder', 'NumberPrefixedElement', 'Attribute', 'Element', 'StringElement'],
+			this, 'ExpressionPiece');
+	},
+
 	// Override
 	// Attribute := ( '@' Char+ )
 	Attribute: function (str, index) {
@@ -443,12 +459,101 @@ var parserUtilsExtended = {
 				index = retAttribute.newIndex;
 				token.addChild(retAttribute.token);
 
+				var matchBracketClose = parserCommonFunctions.checkMatch(str, ']', index);
+				if (matchBracketClose) {
+					index = matchBracketClose.newIndex;
+					token.addChild(matchBracketClose.token);
 
-				token.value = str.substring(originalIndex, index);
-				return {
-					newIndex: index,
-					token: token
-				};
+					token.value = str.substring(originalIndex, index);
+					return {
+						newIndex: index,
+						token: token
+					};
+				}
+			}
+		}
+
+		return undefined;
+	},
+
+	// BoundedElementExpression := '[' ElementName '=' Char+ ']'
+	BoundedElementExpression: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.BoundedElementExpression, '', index);
+
+		var matchBracketOpen = parserCommonFunctions.checkMatch(str, '[', index);
+		if (matchBracketOpen) {
+			index = matchBracketOpen.newIndex;
+			token.addChild(matchBracketOpen.token);
+
+			var retAttribute = this.ElementName(str, index);
+			if (retAttribute) {
+				index = retAttribute.newIndex;
+				token.addChild(retAttribute.token);
+
+				var matchEq = parserCommonFunctions.checkMatch(str, '=', index);
+				if (matchEq) {
+					index = matchEq.newIndex;
+					token.addChild(matchEq.token);
+
+					var retChars = parserCommonFunctions.repeat1Plus(str, index, 'Char', this);
+					if (retChars) {
+						index = retChars.newIndex;
+						token.addChild(retChars.token);
+
+						var matchBracketClose = parserCommonFunctions.checkMatch(str, ']', index);
+						if (matchBracketClose) {
+							index = matchBracketClose.newIndex;
+							token.addChild(matchBracketClose.token);
+	
+							token.value = str.substring(originalIndex, index);
+							return {
+								newIndex: index,
+								token: token
+							};
+						}
+					}
+				}
+			}
+		}
+
+		return undefined;
+	},
+
+	// BoundedElementDeclaration := '[' ElementName ']'
+	BoundedElementDeclaration: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.BoundedElementDeclaration, '', index);
+
+		var matchBracketOpen = parserCommonFunctions.checkMatch(str, '[', index);
+		if (matchBracketOpen) {
+			index = matchBracketOpen.newIndex;
+			token.addChild(matchBracketOpen.token);
+
+			var retAttribute = this.ElementName(str, index);
+			if (retAttribute) {
+				index = retAttribute.newIndex;
+				token.addChild(retAttribute.token);
+
+				var matchBracketClose = parserCommonFunctions.checkMatch(str, ']', index);
+				if (matchBracketClose) {
+					index = matchBracketClose.newIndex;
+					token.addChild(matchBracketClose.token);
+
+					token.value = str.substring(originalIndex, index);
+					return {
+						newIndex: index,
+						token: token
+					};
+				}
 			}
 		}
 
@@ -492,7 +597,7 @@ var parserUtilsExtended = {
 	},
 
 	// Override
-	// Element := ElementName ( BoundedAttributeExpression | BoundedAttributeDeclaration | ArrayIndex )*
+	// Element := ElementName ElementTail?
 	Element: function (str, index) {
 		if (index >= str.length) {
 			return undefined;
@@ -501,41 +606,17 @@ var parserUtilsExtended = {
 		var originalIndex = index;
 		var token = new Token(Token.Element, '', index);
 
+		// ElementName
 		var retElementName = this.ElementName(str, index);
 		if (retElementName) {
 			index = retElementName.newIndex;
 			token.addChild(retElementName.token);
 
-			while (index < str.length) {
-				var tempToken = undefined, tempNewIndex = -1;
-				var retBoundedAttributeExpression = this.BoundedAttributeExpression(str, index);
-				if (retBoundedAttributeExpression) {
-					tempToken = retBoundedAttributeExpression.token;
-					tempNewIndex = retBoundedAttributeExpression.newIndex;
-				}
-
-				var retBoundedAttributeDeclaration = this.BoundedAttributeDeclaration(str, index);
-				if (retBoundedAttributeDeclaration) {
-					if (tempNewIndex < retBoundedAttributeDeclaration.newIndex) {
-						tempToken = retBoundedAttributeDeclaration.token;
-						tempNewIndex = retBoundedAttributeDeclaration.newIndex;
-					}
-				}
-
-				var retArrayIndex = this.ArrayIndex(str, index);
-				if (retArrayIndex) {
-					if (tempNewIndex < retArrayIndex.newIndex) {
-						tempToken = retArrayIndex.token;
-						tempNewIndex = retArrayIndex.newIndex;
-					}
-				}
-
-				if (tempToken) {
-					index = tempNewIndex;
-					token.addChild(tempToken);
-				} else {
-					break;
-				}
+			// ElementTail?
+			var retElementTail = this.ElementTail(str, index);
+			if (retElementTail) {
+				index = retElementTail.newIndex;
+				token.addChild(retElementTail.token);
 			}
 		} else {
 			return undefined;
@@ -572,8 +653,76 @@ var parserUtilsExtended = {
 		};
 	},
 
+	// ElementTail := ( BoundedAttributeExpression | BoundedAttributeDeclaration | BoundedElementExpression | BoundedElementDeclaration | ArrayIndex )+
+	ElementTail: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.ElementTail, '', index);
+
+		while (index < str.length) {
+			var tempToken = undefined, tempNewIndex = -1;
+			var retBoundedAttributeExpression = this.BoundedAttributeExpression(str, index);
+			if (retBoundedAttributeExpression) {
+				tempToken = retBoundedAttributeExpression.token;
+				tempNewIndex = retBoundedAttributeExpression.newIndex;
+			}
+
+			var retBoundedAttributeDeclaration = this.BoundedAttributeDeclaration(str, index);
+			if (retBoundedAttributeDeclaration) {
+				if (tempNewIndex < retBoundedAttributeDeclaration.newIndex) {
+					tempToken = retBoundedAttributeDeclaration.token;
+					tempNewIndex = retBoundedAttributeDeclaration.newIndex;
+				}
+			}
+
+			var retBoundedElementExpression = this.BoundedElementExpression(str, index);
+			if (retBoundedElementExpression) {
+				if (tempNewIndex < retBoundedElementExpression.newIndex) {
+					tempToken = retBoundedElementExpression.token;
+					tempNewIndex = retBoundedElementExpression.newIndex;
+				}
+			}
+
+			var retBoundedElementDeclaration = this.BoundedElementDeclaration(str, index);
+			if (retBoundedElementDeclaration) {
+				if (tempNewIndex < retBoundedElementDeclaration.newIndex) {
+					tempToken = retBoundedElementDeclaration.token;
+					tempNewIndex = retBoundedElementDeclaration.newIndex;
+				}
+			}
+
+			var retArrayIndex = this.ArrayIndex(str, index);
+			if (retArrayIndex) {
+				if (tempNewIndex < retArrayIndex.newIndex) {
+					tempToken = retArrayIndex.token;
+					tempNewIndex = retArrayIndex.newIndex;
+				}
+			}
+
+			if (tempToken) {
+				index = tempNewIndex;
+				token.addChild(tempToken);
+			} else {
+				break;
+			}
+		}
+
+		if (token.children.length < 1) {
+			return undefined;
+		}
+
+		token.value = str.substring(originalIndex, index);
+		return {
+			newIndex: index,
+			token: token
+		};
+	},
+
 	// Override
-	// Char := ( !Dot & !'=' & !'@' & !'[' & !']')
+	// Char := ( !Dot & !'=' & !'@' & !'[' & !']' & !Wildcard & !SingleObjectPlaceholder)
 	Char: function (str, index) {
 		if (index >= str.length) {
 			return undefined;
@@ -599,17 +748,90 @@ var parserUtilsExtended = {
 		if (ret) {
 			return undefined;
 		}
+		ret = this.Wildcard(str, index);
+		if (ret) {
+			return undefined;
+		}
+		ret = this.SingleObjectPlaceholder(str, index);
+		if (ret) {
+			return undefined;
+		}
 
 		return {
 			newIndex: index + 1,
 			token: new Token(Token.Char, str.substr(index, 1), index)
 		}
+	},
+
+	// Wildcard := '*' ElementTail?
+	Wildcard: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.Wildcard, '', index);
+
+		// *
+		var match = parserCommonFunctions.checkMatch(str, '*', index);
+		if (match) {
+			index = match.newIndex;
+			token.addChild(match.token);
+
+			// ElementTail?
+			var retElementTail = this.ElementTail(str, index);
+			if (retElementTail) {
+				index = retElementTail.newIndex;
+				token.addChild(retElementTail.token);
+			}
+		} else {
+			return undefined;
+		}
+
+		token.value = str.substring(originalIndex, index);
+		return {
+			newIndex: index,
+			token: token
+		};
+	},
+
+	// SingleObjectPlaceholder := '?' ElementTail?
+	SingleObjectPlaceholder: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.SingleObjectPlaceholder, '', index);
+
+		// ?
+		var match = parserCommonFunctions.checkMatch(str, '?', index);
+		if (match) {
+			index = match.newIndex;
+			token.addChild(match.token);
+
+			// ElementTail?
+			var retElementTail = this.ElementTail(str, index);
+			if (retElementTail) {
+				index = retElementTail.newIndex;
+				token.addChild(retElementTail.token);
+			}
+		} else {
+			return undefined;
+		}
+
+		token.value = str.substring(originalIndex, index);
+		return {
+			newIndex: index,
+			token: token
+		};
 	}
 };
 
 // now copy over the common methods that are not overridden from parserUtilsRestricted to parserUtilsExtended
 for (var key in parserUtilsRestricted) {
-	if (key !== 'Attribute' && key !== 'Element' &&
+	if (key !== 'ExpressionPiece' && key !== 'Attribute' && key !== 'Element' &&
+		key !== 'Wildcard' && key !== 'SingleObjectPlaceholder' &&
 		key !== 'Usage1Char') {
 		// this is a non-overridden method, so copy it over
 		// we also exclude Usage1Char because it is not needed in parserUtilsExtended
@@ -960,6 +1182,20 @@ Element.prototype.addAttr = function (attr) {
 	this.attributes.push(attr);
 }
 
+Element.prototype.getNumberedChildElementIndex = function (childElementTagName, index) {
+	var foundIndex = -1;
+	for (var c = 0; c < this.children.length; c++) {
+		var child = this.children[c];
+		if (child.tagName === childElementTagName) {
+			foundIndex++;
+			if (foundIndex === index) {
+				return c;
+			}
+		}
+	}
+	return -1;
+}
+
 // Adds a child element (or plain text)
 // Syntax: this.addChild(childElement) => appends the child element
 //		   this.addChild(childElement, index) => inserts the child element at a specific index
@@ -985,11 +1221,41 @@ Element.prototype.addChild = function (childElement, index) {
 			// with elements with index
 			for (var v = childElement.length - 1; v >= 0; v--) {
 				childElement[v].indexPos = index;
-				this.children.push(childElement[v]);
+				var childIndex = this.getNumberedChildElementIndex(childElement[v].tagName, index);
+				if (childIndex > -1) {
+					var oldKids = this.children[childIndex].children,
+						oldAttrs = this.children[childIndex].attributes;
+
+					oldKids.forEach(function (item) {
+						childElement[v].children.push(item);
+					});
+					oldAttrs.forEach(function (item) {
+						childElement[v].attributes.push(item);
+					});
+
+					this.children[childIndex] = childElement[v];
+				} else {
+					this.children.push(childElement[v]);
+				}
 			}
 		} else {
 			childElement.indexPos = index;
-			this.children.push(childElement);
+			var childIndex = this.getNumberedChildElementIndex(childElement.tagName, index);
+			if (childIndex > -1) {
+				var oldKids = this.children[childIndex].children,
+					oldAttrs = this.children[childIndex].attributes;
+
+				oldKids.forEach(function (item) {
+					childElement.children.push(item);
+				});
+				oldAttrs.forEach(function (item) {
+					childElement.attributes.push(item);
+				});
+
+				this.children[childIndex] = childElement;
+			} else {
+				this.children.push(childElement);
+			}
 		}
 	}
 

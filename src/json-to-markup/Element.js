@@ -27,6 +27,20 @@ Element.prototype.addAttr = function (attr) {
 	this.attributes.push(attr);
 }
 
+Element.prototype.getNumberedChildElementIndex = function (childElementTagName, index) {
+	var foundIndex = -1;
+	for (var c = 0; c < this.children.length; c++) {
+		var child = this.children[c];
+		if (child.tagName === childElementTagName) {
+			foundIndex++;
+			if (foundIndex === index) {
+				return c;
+			}
+		}
+	}
+	return -1;
+}
+
 // Adds a child element (or plain text)
 // Syntax: this.addChild(childElement) => appends the child element
 //		   this.addChild(childElement, index) => inserts the child element at a specific index
@@ -52,11 +66,41 @@ Element.prototype.addChild = function (childElement, index) {
 			// with elements with index
 			for (var v = childElement.length - 1; v >= 0; v--) {
 				childElement[v].indexPos = index;
-				this.children.push(childElement[v]);
+				var childIndex = this.getNumberedChildElementIndex(childElement[v].tagName, index);
+				if (childIndex > -1) {
+					var oldKids = this.children[childIndex].children,
+						oldAttrs = this.children[childIndex].attributes;
+
+					oldKids.forEach(function (item) {
+						childElement[v].children.push(item);
+					});
+					oldAttrs.forEach(function (item) {
+						childElement[v].attributes.push(item);
+					});
+
+					this.children[childIndex] = childElement[v];
+				} else {
+					this.children.push(childElement[v]);
+				}
 			}
 		} else {
 			childElement.indexPos = index;
-			this.children.push(childElement);
+			var childIndex = this.getNumberedChildElementIndex(childElement.tagName, index);
+			if (childIndex > -1) {
+				var oldKids = this.children[childIndex].children,
+					oldAttrs = this.children[childIndex].attributes;
+
+				oldKids.forEach(function (item) {
+					childElement.children.push(item);
+				});
+				oldAttrs.forEach(function (item) {
+					childElement.attributes.push(item);
+				});
+
+				this.children[childIndex] = childElement;
+			} else {
+				this.children.push(childElement);
+			}
 		}
 	}
 

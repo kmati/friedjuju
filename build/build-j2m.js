@@ -12,6 +12,19 @@ var version = pkg.version;
 var utils = require('./utils.js');
 
 function createBuilder() {
+	// callback: void function (err)
+	function copyReleaseToExamples(ctxt, callback) {
+		var exampleBundlePath =  path.join(__dirname, '../examples/public/j2m-' + version + '.js');
+		fs.readFile(ctxt.bundlePath, { encoding: 'utf8' }, function (err, content) {
+			if (err) {
+				callback(err);
+				return;
+			}
+
+			fs.writeFile(exampleBundlePath, content, callback);
+		});
+	}
+
 	// Uglifies a string
 	// content: The string to uglify
 	// Returns: The uglified string
@@ -23,7 +36,7 @@ function createBuilder() {
 		ast.figure_out_scope();
 		ast.compute_char_frequency();
 		ast.mangle_names();
-		return ast.print_to_string();		
+		return ast.print_to_string();
 	}
 
 	// callback: void function (err)
@@ -101,7 +114,8 @@ function createBuilder() {
 		release: [
 			mkdirTarget,
 			combineSrc,
-			minify
+			minify,
+			copyReleaseToExamples
 		]
 	};
 
