@@ -50,8 +50,45 @@ var j2j = require('../bin/release/j2j-0.0.1.js');
 console.log('j2j = ',j2j);
 ```
 
-TODO: Fill this in!!
+Then the rest of the code would be:
 
+```
+// set up the path pairs, i.e. take the matches 'from' the sourceObj and write them 'to' the targerObj
+var fromToExpressions = [
+	{ from: 'firstName', to: 'fname' },
+	{ from: 'address.street', to: 'st.' },
+	{ from: 'address.city', to: 'city' }
+];
+
+// the object to read matches from
+var sourceObj = {
+	firstName: 'Joe',
+	lastName: 'Chen',
+	age: 34,
+	address: {
+		street: '10 Anywhere Road',
+		city: 'Rivendell',
+		country: 'Nowhere'
+	}
+};
+
+// the object that defines the structure to write to
+// Note: This targetObj will NOT be modified; only the result from the j2j.transform method call will contain the modified object
+var targetObj = { x: 88, fname: "XXX" };
+var result = j2j.transform(fromToExpressions, sourceObj, targetObj);
+console.log('result = ' + JSON.stringify(result, undefined, 2));
+```
+
+The output is:
+
+```
+result = {
+  "x": 88,
+  "fname": "Joe",
+  "st": "10 Anywhere Road",
+  "city": "Rivendell"
+}
+```
 
 **Syntax for dot expressions:**
 
