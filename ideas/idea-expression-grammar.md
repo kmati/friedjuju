@@ -90,7 +90,7 @@ ArrayIndex := '[' Digit+ ']'
 
 Element := ElementName ElementTail?
 
-ElementName := Char+
+ElementName := (Char & !Digit) Char*
 
 ElementTail := ( BoundedAttributeExpression | BoundedAttributeDeclaration | BoundedElementExpression | BoundedElementDeclaration | ArrayIndex )+
 
@@ -124,7 +124,7 @@ ArrayIndex := '[' Digit+ ']'
 
 Element := ElementName ElementTail?
 
-ElementName := Char+
+ElementName := (Char & !Digit) Char*
 
 ElementTail := ( BoundedAttributeExpression | BoundedAttributeDeclaration | BoundedElementExpression | BoundedElementDeclaration | ArrayIndex )+
 

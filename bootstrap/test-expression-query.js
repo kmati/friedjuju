@@ -29,7 +29,9 @@ var obj = {
 //var expr = '*.address[country=USA]';
 //var expr = 'people.address[country=USA]';
 //var expr = '*[country=USA]';
-var expr = '$1desc';
+//var expr = '$1desc';
+//var expr = 'people[1].*.city';
+var expr = 'people[2].?.city';
 var matches = expressionQuery.query(expr, obj);
 console.log('expr = ' + expr);
 console.log('matches = ',matches);

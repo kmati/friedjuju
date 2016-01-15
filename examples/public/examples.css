@@ -30,3 +30,15 @@ th, td{
 	background-color: #eee;
 	border: solid 1px #ccc;
 }
+
+#source-json,
+#initial-target-json{
+	min-height: 200px;
+	min-width: 300px;
+}
+
+#from-to-expressions-json,
+#target-json{
+	min-height: 400px;
+	min-width: 300px;
+}

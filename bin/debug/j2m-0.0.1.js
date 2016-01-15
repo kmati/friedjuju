@@ -368,7 +368,7 @@ var parser = {
 		BoundedElementDeclaration := '[' ElementName ']'
 		ArrayIndex := '[' Digit+ ']'
 		Element := ElementName ElementTail?
-		ElementName := Char+
+		ElementName := (Char & !Digit) Char*
 		ElementTail := ( BoundedAttributeExpression | BoundedAttributeDeclaration | BoundedElementExpression | BoundedElementDeclaration | ArrayIndex )+
 		NumberPrefixedElement := ( '$' Digit+ Element )
 		StringElement := '$str'
@@ -845,7 +845,7 @@ var parserUtilsExtended = {
 		};
 	},
 
-	// ElementName := Char+
+	// ElementName := (Char & !Digit) Char*
 	ElementName: function (str, index) {
 		if (index >= str.length) {
 			return undefined;
@@ -853,6 +853,12 @@ var parserUtilsExtended = {
 
 		var originalIndex = index;
 		var token = new Token(Token.ElementName, '', index);
+
+		var ret1stChar = this.Char(str, index);
+		var ret1stDigit = this.Digit(str, index);
+		if (ret1stDigit || !ret1stChar) {
+			return undefined;
+		}
 
 		var retChars = parserCommonFunctions.repeat1Plus(str, index, 'Char', this);
 		if (retChars) {

@@ -18,7 +18,10 @@ var expressionQueryImpl = {
 			obj.forEach(function (item) {
 				var matches = expressionQueryImpl.yieldAll(item);
 				for (var c = 0; c < matches.length; c++) {
-					ret.push(matches[c]);
+					var matchItem = matches[c];
+					if (ret.indexOf(matchItem) === -1) {
+						ret.push(matchItem);
+					}
 				}
 			});
 
@@ -30,7 +33,9 @@ var expressionQueryImpl = {
 			var val = obj[key];
 			var childMatches = this.yieldAll(val);
 			childMatches.forEach(function (childMatch) {
-				matches.push(childMatch);
+				if (matches.indexOf(childMatch) === -1) {
+					matches.push(childMatch);
+				}
 			});
 		}
 		return matches;
@@ -238,8 +243,10 @@ var expressionQuery = {
 				if (!matches) {
 					// since we don't have matches yet, get all the objects in the object graph
 					matches = expressionQueryImpl.yieldAll(obj);
+				} else {
+					// if we have matches then leave them as is
+					matches = expressionQueryImpl.yieldAll(matches);
 				}
-				// if we have matches then leave them as is
 
 				if (matches && firstChild.children.length > 1) {
 					// Now we handle the rest of the element expressions
