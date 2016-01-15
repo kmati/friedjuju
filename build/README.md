@@ -87,3 +87,20 @@ Please note that if you want to use j2m from node.js rather than from the browse
 
 1. To require src/j2m.js
 2. To require bin/debug/j2m-{version}.js or bin/release/j2m-{version}.js
+
+
+# Building Everything
+
+Okay, instead of building the pieces one by one, you can do this:
+
+```
+cd build
+```
+
+Then
+
+```
+node build-all.js -target all
+```
+
+This will invoke the ```build-j2m.js``` and ```build.j2j.js``` scripts and pass on the ```-target all``` command line argument to both of the scripts.
