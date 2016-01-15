@@ -71,3 +71,59 @@ Hence the console output is:
 I am in FnA and the object is: A
 I am in FnD and the object is: D
 ```
+
+# Invocation
+
+```
+// this is the root object that will be traversed
+var rootObj = {
+	people: [
+		{
+			name: 'Kuria Kano',
+			age: 23,
+			address: { street: '7 Sky Way', city: 'Arnor' }
+		},
+		{
+			name: 'Milton Keynes',
+			age: 29,
+			address: { street: '17 Biltmore Lane', city: 'Numenor' }
+		},
+		{
+			name: 'Sauron Stepchild',
+			age: 25,
+			address: { street: '44 Dark Alley', city: 'Mordor' }
+		}
+	]
+};
+
+// this is the array of mappings between expressions (that describe objects to match on) and functions
+var mapping = [
+	{ 'people.name': function (obj) { console.log('Handling the name | obj = ' + obj); } },
+	{ 'people.address.city': function (obj) { console.log('Handling the city | obj = ' + obj); } },
+	{ 'people.name': function (obj) { console.log('Handling the name in a different way | obj = ' + obj); } }
+]
+
+// this is the invocation to perform the traversal
+j2f.traverse(rootObj, mapping);
+```
+
+The console output is:
+
+```
+Handling the name | obj = Kuria Kano
+Handling the name in a different way | obj = Kuria Kano
+Handling the city | obj = Arnor
+Handling the name | obj = Milton Keynes
+Handling the name in a different way | obj = Milton Keynes
+Handling the city | obj = Numenor
+Handling the name | obj = Sauron Stepchild
+Handling the name in a different way | obj = Sauron Stepchild
+Handling the city | obj = Mordor
+```
+
+From the above it is clear that the signature of the ```j2f.traverse``` method is:
+
+```
+j2f.traverse(rootObj, mappingArray) -> void
+```
+
