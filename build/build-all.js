@@ -28,16 +28,16 @@ if (target !== 'release' && target !== 'debug' && target !== 'all') {
 	return;
 }
 
-console.log('************************************************');
-console.log('*                                              *');
-console.log('*    build-all: The builder for j2m and j2j    *');
-console.log('*        Copyright (c) 2016 Kimanzi Mati       *');
-console.log('*                   MIT License                *');
-console.log('*                                              *');
-console.log('************************************************');
+console.log('*****************************************************');
+console.log('*                                                   *');
+console.log('*    build-all: The builder for j2m, j2j and j2f    *');
+console.log('*           Copyright (c) 2016 Kimanzi Mati         *');
+console.log('*                      MIT License                  *');
+console.log('*                                                   *');
+console.log('*****************************************************');
 
-['./build-j2j.js', './build-j2m.js'].forEach(function (modPath) {
-	modPath = path.join(__dirname, modPath);
+['./build-j2j.js', './build-j2m.js', './build-j2f.js'].forEach(function (modPath) {
+	//modPath = path.join(__dirname, modPath);
 
 	var proc = child_process.fork(modPath, ['-target', target], { cwd: __dirname });
 	proc.on('close', function (code) {
