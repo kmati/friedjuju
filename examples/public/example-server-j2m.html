@@ -84,7 +84,7 @@
 					var inputJson = this.jsonTextArea.value;
 
 					var request = new XMLHttpRequest();
-					request.open('POST', '/markupify?prettyPrint=' + this.chkPrettyPrint.checked.toString(), true);
+					request.open('POST', '/markupify?prettyPrint=' + this.chkPrettyPrint.checked.toString() + '&mime=text/html', true);
 					request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
 
 					var self = this;

@@ -1,0 +1,121 @@
+<html>
+	<head>
+		<title>Example - j2j on the server</title>
+		<script type="text/javascript" src="j2j-0.0.1.js"></script>
+		<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css"/>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
+		<link rel="stylesheet" href="examples.css"/>
+	</head>
+	<body>
+
+	<a href="/">Examples Main</a><br/>
+	<h2>Example - j2j on the server</h2>
+
+	<table>
+		<tr>
+			<td valign="top">
+				1. Enter the JSON for the source object here:<br/>
+				<textarea id="source-json">
+{
+	"firstName": "Joe",
+	"lastName": "Chen",
+	"age": 34,
+	"address": {
+		"street": "10 Anywhere Road",
+		"city": "Rivendell",
+		"country": "Nowhere"
+	}
+}
+				</textarea>
+				<br/>
+				2. Enter the initial JSON for the target object here:<br/>
+				<textarea id="initial-target-json">
+{
+	"x": 88, "fname": "XXX"
+}
+				</textarea>
+			</td>
+			<td valign="top">
+				3. Enter the JSON for the mapping expressions:<br/>
+				<textarea id="from-to-expressions-json">
+[
+	{ "from": "firstName", "to": "fname" },
+	{ "from": "address.street", "to": "st." },
+	{ "from": "address.city", "to": "city" }
+]
+				</textarea>
+			</td>
+			<td>
+				<button id="transform-json">
+					<i class="fa fa-cog"></i>
+					Transform JSON
+				</button>
+			</td>
+			<td valign="top">
+				Generated JSON:<br/>
+				<textarea id="target-json"></textarea>
+			</td>
+		</tr>
+	</table>
+
+	<script type="text/javascript">
+		var generator = {
+			init: function () {
+				this.sourceObjTextArea = document.getElementById('source-json');
+				this.initialTargetObjTextArea = document.getElementById('initial-target-json');
+				this.fromToExpressionsJson = document.getElementById('from-to-expressions-json');
+				this.targetObjTextArea = document.getElementById('target-json');
+
+				this.transformJson = document.getElementById('transform-json');
+
+				this.transformJson.onclick = function () {
+					generator.clickedTransformJson();
+				}
+			},
+
+			clickedTransformJson: function () {
+				try {
+					var initialTargetObjJson = this.initialTargetObjTextArea.value.trim();
+					var sourceObj = JSON.parse(this.sourceObjTextArea.value),
+						initialTargetObj = initialTargetObjJson.length > 0 ? JSON.parse(initialTargetObjJson) : null,
+						fromToExpressions = JSON.parse(this.fromToExpressionsJson.value);
+
+					var request = new XMLHttpRequest();
+					request.open('POST', '/transform-json', true);
+					request.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+
+					var self = this;
+					request.onload = function() {
+						if (request.status >= 200 && request.status < 400) {
+							// Success!
+							var result = request.responseText;
+							var resultObj = JSON.parse(result); // make sure the result is JSON (error will be caught below!)
+							self.targetObjTextArea.value = JSON.stringify(resultObj, undefined, 2);
+							console.log('The result is:\n' + result);
+						} else {
+							// We reached our target server, but it returned an error
+							alert('Some error occurred!\n' + request.responseText);
+						}
+					};
+
+					request.onerror = function() {
+						// There was a connection error of some sort
+						alert('Had a problem connecting to the /transform-json web service!');
+					};
+
+					request.send(JSON.stringify({
+						fromToExpressions: fromToExpressions,
+						sourceObj: sourceObj,
+						initialTargetObj: initialTargetObj
+					}));
+				} catch (e) {
+					alert(e);
+				}
+			}
+		};
+
+		generator.init();
+	</script>
+
+	</body>
+</html>
