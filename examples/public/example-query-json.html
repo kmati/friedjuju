@@ -1,0 +1,80 @@
+<html>
+	<head>
+		<title>Example - j2j query</title>
+		<script type="text/javascript" src="j2j-0.0.1.js"></script>
+		<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css"/>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
+		<link rel="stylesheet" href="examples.css"/>
+	</head>
+	<body>
+
+	<a href="/">Examples Main</a><br/>
+	<h2>Example - j2j query</h2>
+
+	<table>
+		<tr>
+			<td valign="top">
+				Enter the JSON for the source object here:<br/>
+				<textarea id="query-source-json">
+{
+	"firstName": "Joe",
+	"lastName": "Chen",
+	"age": 34,
+	"address": {
+		"street": "10 Anywhere Road",
+		"city": "Rivendell",
+		"country": "Nowhere"
+	}
+}
+				</textarea>
+			</td>
+			<td valign="top">
+				Enter the query expression:<br/>
+				<input id="query-expr" type="text" value="address.city"/>
+				<br/>
+				<br/>
+				<button id="execute-query">
+					<i class="fa fa-cog"></i>
+					Execute Query
+				</button>
+			</td>
+			<td valign="top">
+				Query Result as JSON:<br/>
+				<textarea id="result-json"></textarea>
+			</td>
+		</tr>
+	</table>
+
+	<script type="text/javascript">
+		var generator = {
+			init: function () {
+				this.sourceObjTextArea = document.getElementById('query-source-json');
+				this.queryExprField = document.getElementById('query-expr');
+				this.resultTextArea = document.getElementById('result-json');
+
+				this.executeQuery = document.getElementById('execute-query');
+
+				this.executeQuery.onclick = function () {
+					generator.clickedExecuteQuery();
+				}
+			},
+
+			clickedExecuteQuery: function () {
+				try {
+					var sourceObj = JSON.parse(this.sourceObjTextArea.value),
+						queryExpr = this.queryExprField.value.trim();
+
+					var result = j2j.query(queryExpr, sourceObj);
+					this.resultTextArea.value = JSON.stringify(result, undefined, 2);
+					console.log('The result is:\n' + result);
+				} catch (e) {
+					alert(e);
+				}
+			}
+		};
+
+		generator.init();
+	</script>
+
+	</body>
+</html>

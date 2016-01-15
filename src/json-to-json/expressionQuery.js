@@ -42,13 +42,20 @@ var expressionQueryImpl = {
 	},
 
 	yieldImmediateChildren: function (obj) {
+		if (typeof obj !== 'object') {
+			// since obj is not an object, return no matches
+			return [];
+		}
+
 		if (obj instanceof Array) {
 			var ret = [];
 
 			obj.forEach(function (item) {
-				var matches = expressionQueryImpl.yieldImmediateChildren(item);
-				for (var c = 0; c < matches.length; c++) {
-					ret.push(matches[c]);
+				for (var key in item) {
+					var val = item[key];
+					if (typeof obj === 'object') {
+						ret.push(val);
+					}
 				}
 			});
 
@@ -101,7 +108,7 @@ var expressionQueryImpl = {
 
 		var matches = [];
 		for (var key in obj) {
-			if (key === '$' + instanceIndex + elementName) {
+			if ((instanceIndex === 0 && key === elementName) || (key === '$' + instanceIndex + elementName)) {
 				matches.push(obj[key]);
 			}
 		}

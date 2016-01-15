@@ -38,7 +38,9 @@ th, td{
 }
 
 #from-to-expressions-json,
-#target-json{
+#target-json,
+#query-source-json,
+#result-json{
 	min-height: 400px;
 	min-width: 300px;
 }
