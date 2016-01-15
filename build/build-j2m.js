@@ -72,26 +72,21 @@ function createBuilder() {
 
 	// callback: void function (err)
 	function combineSrc(ctxt, callback) {
-		// Execute this command line:
-		// browserify src/json-to-markup/j2m.js -o {target directory}/j2m-{version}.js
 		var bundlePath =  path.join(ctxt.binDir, 'j2m-' + version + '.js');
 
-		var cmdLine = "browserify \"" + ctxt.srcMainPath + "\" -o \"" + bundlePath + "\"";
-	    child_process.exec(cmdLine, function (error, output, stderr) {
-	        if (error) {
-	            callback(error);
-	            return;
-	        }
-
-	        if (stderr) {
-	        	callback(stderr);
-	        	return;
-	        }
-
-	        ctxt.bundlePath = bundlePath;
-
-	        moduleExportationAddition(ctxt, callback);
-	    });
+		var browserify = require('browserify');
+		browserify()
+		    .require(ctxt.srcMainPath, { 
+		    	entry: true, 
+		    	debug: true  
+		    })
+		    .bundle()
+		    .on('error', function (err) { console.error(err); })
+		    .pipe(fs.createWriteStream(bundlePath))
+		    .on('finish', function () {
+		        ctxt.bundlePath = bundlePath;
+		        moduleExportationAddition(ctxt, callback);		    	
+		    });		
 	}
 
 	// callback: void function (err)

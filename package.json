@@ -11,7 +11,8 @@
     "url": "http://www.nocrunchtime.com"
   },
   "dependencies": {
-    "uglify-js": "*"
+    "uglify-js": "*",
+    "browserify": "*"
   },
   "engines": {
     "node": ">=0.8.0"
