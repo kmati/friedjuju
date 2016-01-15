@@ -1,0 +1,36 @@
+<html>
+	<head>
+		<script type="text/javascript" src="j2m-0.0.1.js"></script>
+	</head>
+	<body>
+		
+		<script type="text/javascript">
+		var styles = {
+			'style.@type': 'text/css',
+			'style': 'body{ font-family: Arial; font-size: 12pt; color: #333; }\n' + 
+				'table{ background-color: #aaa; }\n' +
+				'.odd{ background-color: #777; }'
+		};
+
+		var pageDef = {
+			'h1': 'Hello, I am alive!',
+			'p': 'This is a simple page that will showcase some of the benefits of j2m.',
+			hr: null,
+			'section.$0div': 'My section',
+			'section.$1div.div': 'This is the section underneath the label',
+			'section.$1div.table.thead.tr.th': ['Person', 'Age'],
+			'section.$1div.table.tbody.$0tr.@class': 'odd',
+			'section.$1div.table.tbody.$0tr.td': ['Joe', 23],
+			'section.$1div.table.tbody.$1tr.@class': 'even',
+			'section.$1div.table.tbody.$1tr.td': ['Sally', 42],
+			'section.$1div.table.tbody.$2tr.@class': 'odd',
+			'section.$1div.table.tbody.$2tr.td': ['Mike', 78]
+		};
+
+		j2m.prettyPrint = false;
+
+		document.head.innerHTML += j2m.execute(styles);
+		document.body.innerHTML = j2m.execute(pageDef);
+		</script>
+	</body>
+</html>
