@@ -24,14 +24,57 @@ var rootObj = {
 	]
 };
 
+// ---------
+// NOTE: You can use whichever permutation of the mapping that you want. The result is the same!
+// ---------
+
+// Permutation 1:
 // this is the array of mappings between expressions (that describe objects to match on) and functions
-var mapping = [
-	{ 'people.name': function (obj) { console.log('Handling the name | obj = ' + obj); } },
-	{ 'people.address.city': function (obj) { console.log('Handling the city | obj = ' + obj); } },
-	{ 'people.name': function (obj) { console.log('Handling the name in a different way | obj = ' + obj); } }
-];
+// var mapping = [
+// 	{ 'people.name': function (obj) { console.log('Handling the name | obj = ' + obj); } },
+// 	{ 'people.address.city': function (obj) { console.log('Handling the city | obj = ' + obj); } },
+// 	{ 'people.name': function (obj) { console.log('Handling the name in a different way | obj = ' + obj); } }
+// ];
+
+// Permutation 2:
+// this is the array of mappings between expressions (that describe objects to match on) and functions
+// var mapping = [
+//     {
+//         'people.name': function (obj) { console.log('Handling the name | obj = ' + obj); },
+//         'people.address.city': function (obj) { console.log('Handling the city | obj = ' + obj); }
+//     },
+//     { 'people.name': function (obj) { console.log('Handling the name in a different way | obj = ' + obj); } }
+// ];
+
+// Permutation 3:
+// this is the array of mappings between expressions (that describe objects to match on) and functions
+// var mapping = [
+//     {
+//         'people.name': [
+//             function (obj) { console.log('Handling the name | obj = ' + obj); },
+//             function (obj) { console.log('Handling the name in a different way | obj = ' + obj); }
+//         ]
+//     },
+//     { 'people.address.city': function (obj) { console.log('Handling the city | obj = ' + obj); } }
+// ];
+
+// Permutation 4:
+// this is the object that describes the mappings between expressions (that describe objects to match on) and functions
+var mapping = {
+    'people.name': [
+        function (obj) { console.log('Handling the name | obj = ' + obj); },
+        function (obj) { console.log('Handling the name in a different way | obj = ' + obj); }
+    ],
+    'people.address.city': function (obj) { console.log('Handling the city | obj = ' + obj); }
+};
 
 // this is the invocation to perform the traversal
-console.log('Before | rootObj = ' + JSON.stringify(rootObj, undefined, 2));
 j2f.traverse(rootObj, mapping);
-console.log('After | rootObj = ' + JSON.stringify(rootObj, undefined, 2));
+
+
+var countAddresses = 0;
+var counterMap = {
+	'people.address': function (obj) { countAddresses++; }
+};
+j2f.traverse(rootObj, counterMap);
+console.log('We found ' + countAddresses + ' addresses');
