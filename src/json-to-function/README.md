@@ -235,3 +235,16 @@ In this case the traversal order is:
 
 You will notice here that there are 2 distinct String objects, i.e. ```foo.car``` is distinguishable from ```foo.girl```, or in simple terms: ```foo.car !== foo.girl```
 
+
+# Function Signature of the Bound Functions
+
+The bound functions that are associated with objects in the object graph have the following signature:
+
+```
+Fn(obj, parentObj) -> void
+```
+
+where:
+* obj: is the current object in the traversal
+* parentObj: is the parent of the current object in the traversal
+

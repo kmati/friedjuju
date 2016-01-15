@@ -24,6 +24,8 @@ var rootObj = {
 	]
 };
 
+console.log('Mapping to do trivial handling:')
+console.log('-------------------------------');
 // ---------
 // NOTE: You can use whichever permutation of the mapping that you want. The result is the same!
 // ---------
@@ -72,9 +74,65 @@ var mapping = {
 j2f.traverse(rootObj, mapping);
 
 
+console.log();
+console.log('Mapping to do counting:')
+console.log('-----------------------');
+// Let's count addresses
 var countAddresses = 0;
 var counterMap = {
 	'people.address': function (obj) { countAddresses++; }
 };
 j2f.traverse(rootObj, counterMap);
 console.log('We found ' + countAddresses + ' addresses');
+
+
+console.log();
+console.log('Mapping to do some printing:')
+console.log('----------------------------');
+// Let's print the hierarchy
+var printMap = {
+	// Match all objects with a name property
+	'*[name]': function (person) {
+		console.log('Person info:');
+		for (var key in person) {
+			if (key !== 'address') {
+				console.log('==> ' + key + ': ' + person[key]);
+			}
+		}
+	},
+
+	// Match all address objects which are children of the top-level
+	'?.address': function (address) {
+		console.log('==> Address:');
+		for (var key in address) {
+			console.log('\t ' + key + ': ' + address[key]);
+		}
+		console.log();
+	}
+};
+j2f.traverse(rootObj, printMap);
+
+
+console.log();
+console.log('Mapping to do some printing with a single mapping function:')
+console.log('-----------------------------------------------------------');
+// Let's print the hierarchy
+var printMap = {
+	// Match all address objects which are children of the top-level
+	// Notice that the second argument to the handling function is the parent object of the first object,
+	// i.e. the first argument is address and the second argument is person (because person contains the address).
+	'?.address': function (address, person) {
+		console.log('Person info:');
+		for (var key in person) {
+			if (key !== 'address') {
+				console.log('==> ' + key + ': ' + person[key]);
+			}
+		}
+		console.log('==> Address:');
+		for (var key in address) {
+			console.log('\t ' + key + ': ' + address[key]);
+		}
+		console.log();
+	}
+};
+j2f.traverse(rootObj, printMap);

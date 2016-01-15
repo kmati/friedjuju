@@ -70,28 +70,29 @@ var j2fTransformer = {
 		}
 	},
 
-	onNode: function (obj) {
+	onNode: function (obj, parentObj) {
 		// get the bound functions (if there are any)
 		var boundFns = obj.__boundFns;
 		if (boundFns) {
-			// invoke the bound functions and pass the obj to them
-			boundFns.forEach(function (fn) {
-				fn(obj);
-			});
-
 			// now unbind the bound functions
 			delete obj.__boundFns;
+
+			// invoke the bound functions and pass the obj to them
+			boundFns.forEach(function (fn) {
+				fn(obj, parentObj);
+			});
 		}
 	},
 
 	// obj: The object to traverse
-	traverse: function (obj) {
-		this.onNode(obj);
+	// parentObj: [OPTIONAL] The parent object
+	traverse: function (obj, parentObj) {
+		this.onNode(obj, parentObj);
 
 		for (var key in obj) {
 			var val = obj[key];
 			if (typeof val === 'object') {
-				this.traverse(val);
+				this.traverse(val, obj);
 			}
 		}
 	}
