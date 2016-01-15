@@ -92,5 +92,5 @@ result = {
 
 **Syntax for dot expressions:**
 
-Details about the syntax of the dot expressions can be found in the [ideas/idea-expression-grammar.md](ideas/idea-expression-grammar.md "A Full(ish) Description of the Expression Grammar") document. Read the sections describing Usages 2 and 3.
+Details about the syntax of the dot expressions can be found in the [ideas/idea-expression-grammar.md](../../ideas/idea-expression-grammar.md "A Full(ish) Description of the Expression Grammar") document. Read the sections describing Usages 2 and 3.
 
