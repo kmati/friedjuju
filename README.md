@@ -54,18 +54,59 @@ This will generate the following files in the bin/debug or bin/release directory
 * j2j-{version}.js (the [j2j](src/json-to-json) library)
 * j2f-{version}.js (the [j2f](src/json-to-function) library)
 
-For example, to use j2m-0.0.1.js, you would do this:
+To use the libraries in a web page (pick only the ones that you need):
 
 ```
+<!-- to use j2m-0.0.1.js in your web page -->
 <script type="text/javascript" src="path/to/j2m-0.0.1.js"></script>
+
+<!-- to use j2j-0.0.1.js in your web page -->
+<script type="text/javascript" src="path/to/j2j-0.0.1.js"></script>
+
+<!-- to use j2f-0.0.1.js in your web page -->
+<script type="text/javascript" src="path/to/j2f-0.0.1.js"></script>
 ```
 
-Please note that if you want to use j2m from node.js rather than from the browser then you have 2 choices:
+Please note that if you want to use the libraries in node.js rather than in the browser then you can do the following:
 
-1. To require src/j2m.js
-2. To require bin/debug/j2m-{version}.js or bin/release/j2m-{version}.js
+*For j2m:*
 
-The same usage applies to [j2j](src/json-to-json) and [j2f](src/json-to-function).
+```
+// to require the release j2m
+var j2m = require('../bin/release/j2m-0.0.1.js');
+
+// to require the debug j2m
+var j2m = require('../bin/debug/j2m-0.0.1.js');
+
+// to require the src j2m
+var j2m = require('../src/json-to-markup/j2m.js');
+```
+
+*For j2j:*
+
+```
+// to require the release j2j
+var j2j = require('../bin/release/j2j-0.0.1.js');
+
+// to require the debug j2j
+var j2j = require('../bin/debug/j2j-0.0.1.js');
+
+// to require the src j2j
+var j2j = require('../src/json-to-json/j2j.js');
+```
+
+*For j2f:*
+
+```
+// to require the release j2f
+var j2f = require('../bin/release/j2f-0.0.1.js');
+
+// to require the debug j2f
+var j2f = require('../bin/debug/j2f-0.0.1.js');
+
+// to require the src j2f
+var j2f = require('../src/json-to-function/j2f.js');
+```
 
 # Other Docs
 
