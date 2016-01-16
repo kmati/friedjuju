@@ -67,7 +67,7 @@ To use the libraries in a web page (pick only the ones that you need):
 <script type="text/javascript" src="path/to/j2f-0.0.1.js"></script>
 ```
 
-Please note that if you want to use the libraries in node.js rather than in the browser then you can do the following:
+Please note that if you want to use the libraries in node.js rather than in the browser then you can pick any of the following:
 
 *For j2m:*
 
