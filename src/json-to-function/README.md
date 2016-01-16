@@ -250,3 +250,36 @@ where:
 * priorObj: is the last object that was traversed before the current one
 * ctxt: is a context object into which the bound functions can write state to, so as to share with downstream objects in the traversal
 
+
+#Sharing context between functions
+
+It is possible to share context between functions during the traversal using the ```ctxt``` fourth argument of the bound functions (see above). In the example below we use the ```ctxt``` to accumulate the ```totalSales``` during the traversal. At the end we will have collected the total sales.
+
+```
+var salesData = {
+	sales: [
+		{ customer: { accountNo: 1234, name: 'Joe Smith' }, ytd: 129500 },
+		{ customer: { accountNo: 3742, name: 'Farina Pasta' }, ytd: 130000 },
+		{ customer: { accountNo: 2848, name: 'Chima Mango' }, ytd: 106000 },
+		{ customer: { accountNo: 5949, name: 'Hortense Skyne' }, ytd: 120000 },
+		{ customer: { accountNo: 2626, name: 'Wanda Mo' }, ytd: 95000 },
+	]
+};
+var salesMap = {
+	'sales[*]': function (salesObj, parentObj, priorObj, ctxt) {
+		if (typeof ctxt.totalSales === 'undefined') {
+			ctxt.totalSales = 0;
+		}
+		ctxt.totalSales += salesObj.ytd;
+	}
+};
+
+var salesResult = j2f.traverse(salesData, salesMap);
+console.log('Sales data result = ',salesResult);
+```
+
+The console output is:
+
+```
+Sales data result =  { totalSales: 580500 }
+```
