@@ -50,11 +50,9 @@ node build-all.js -target release
 
 This will generate the following files in the bin/debug or bin/release directory (depending on the -target value). You can then use that in your web project:
 
-```
-j2m-{version}.js (the [j2m](src/json-to-markup) library)
-j2j-{version}.js (the [j2j](src/json-to-json) library)
-j2f-{version}.js (the [j2f](src/json-to-function) library)
-```
+* j2m-{version}.js (the [j2m](src/json-to-markup) library)
+* j2j-{version}.js (the [j2j](src/json-to-json) library)
+* j2f-{version}.js (the [j2f](src/json-to-function) library)
 
 For example, to use j2m-0.0.1.js, you would do this:
 
