@@ -151,6 +151,7 @@ var salesData = {
 	]
 };
 var salesMap = {
+	// match the elements in the sales array
 	'sales[*]': function (salesObj, parentObj, priorObj, ctxt) {
 		if (typeof ctxt.totalSales === 'undefined') {
 			ctxt.totalSales = 0;
