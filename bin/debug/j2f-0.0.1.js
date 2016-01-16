@@ -150,7 +150,7 @@ var parser = {
 		BoundedAttributeDeclaration := '[' Attribute ']'
 		BoundedElementExpression := '[' ElementName '=' Char+ ']'
 		BoundedElementDeclaration := '[' ElementName ']'
-		ArrayIndex := '[' Digit+ ']'
+		ArrayIndex := '[' ( Digit+ | '*' ) ']'
 		Element := ElementName ElementTail?
 		ElementName := (Char & !Digit) Char*
 		ElementTail := ( BoundedAttributeExpression | BoundedAttributeDeclaration | BoundedElementExpression | BoundedElementDeclaration | ArrayIndex )+
@@ -560,7 +560,7 @@ var parserUtilsExtended = {
 		return undefined;
 	},
 
-	// ArrayIndex := '[' Digit+ ']'
+	// ArrayIndex := '[' ( Digit+ | '*' ) ']'
 	ArrayIndex: function (str, index) {
 		if (index >= str.length) {
 			return undefined;
@@ -573,6 +573,26 @@ var parserUtilsExtended = {
 		if (matchBracketOpen) {
 			index = matchBracketOpen.newIndex;
 			token.addChild(matchBracketOpen.token);
+
+			var matchStar = parserCommonFunctions.checkMatch(str, '*', index);
+			if (matchStar) {
+				index = matchStar.newIndex;
+				token.addChild(matchStar.token);
+
+				var matchBracketClose = parserCommonFunctions.checkMatch(str, ']', index);
+				if (matchBracketClose) {
+					index = matchBracketClose.newIndex;
+					token.addChild(matchBracketClose.token);
+
+					token.value = str.substring(originalIndex, index);
+					return {
+						newIndex: index,
+						token: token
+					};
+				}
+
+				return undefined;
+			}
 
 			var retDigits = parserCommonFunctions.repeat1Plus(str, index, 'Digit', this);
 			if (retDigits) {
@@ -1213,29 +1233,39 @@ var j2fTransformer = {
 		}
 	},
 
-	onNode: function (obj) {
+	onNode: function (obj, parentObj, priorObj, ctxt) {
 		// get the bound functions (if there are any)
 		var boundFns = obj.__boundFns;
 		if (boundFns) {
-			// invoke the bound functions and pass the obj to them
-			boundFns.forEach(function (fn) {
-				fn(obj);
-			});
-
 			// now unbind the bound functions
 			delete obj.__boundFns;
+
+			// invoke the bound functions and pass the obj to them
+			boundFns.forEach(function (fn) {
+				fn(obj, parentObj, priorObj, ctxt);
+			});
 		}
 	},
 
+	// Traverses an object graph and invokes functions that are bound to objects in the graph
 	// obj: The object to traverse
-	traverse: function (obj) {
-		this.onNode(obj);
+	// parentObj: The parent object
+	// priorObj: The last object that was traversed
+	// ctxt: The context object that can be modified by any of the bound functions if they need to
+	traverse: function (obj, parentObj, priorObj, ctxt) {
+		this.onNode(obj, parentObj, priorObj, ctxt);
 
+		// default the last object to the current object since it has just been traversed!
+		var lastObj = obj;
+
+		// process the children of the current object
 		for (var key in obj) {
 			var val = obj[key];
 			if (typeof val === 'object') {
-				this.traverse(val);
+				this.traverse(val, obj, lastObj, ctxt);
 			}
+
+			lastObj = val;
 		}
 	}
 };
@@ -1244,8 +1274,10 @@ var j2fTransformer = {
  * j2f
  */
 var j2f = window.j2f = {
+	// Traverses an object graph and invokes functions that are bound to objects in the graph
 	// rootObj: The object to traverse
-	// mappingArray: The mapping array between expressions (Usages 2 and 3) and functions
+	// mappingArray: The mapping array between expressions (Usages 2 and 3) that match to objects in the graph and functions
+	// Returns: The context object (ctxt) that has been manipulated by the traversal functions
 	traverse: function (rootObj, mappingArray) {
 		if (!rootObj) {
 			return;
@@ -1254,7 +1286,9 @@ var j2f = window.j2f = {
 		var normalizedMap = j2fTransformer.normalizeMappingArray(mappingArray);
 
 		j2fTransformer.bind(rootObj, normalizedMap);
-		j2fTransformer.traverse(rootObj);
+		var ctxt = {};
+		j2fTransformer.traverse(rootObj, null, null, ctxt);
+		return ctxt;
 	}
 };
 
@@ -1472,12 +1506,22 @@ var expressionQueryImpl = {
 			if (kid.id === 'ArrayIndex') {
 				var arrayIndexDigit = kid.children[1];
 				var newMatches = [];
-				obj.forEach(function (match) {
-					var indexToGet = Number(arrayIndexDigit.value);
-					if (indexToGet < match.length) {
-						newMatches.push(match[indexToGet]);
-					}
-				});
+				if (arrayIndexDigit.value === '*') {
+					// [*] => this is for picking all the elements of the array
+					obj.forEach(function (match) {
+						match.forEach(function (item) {
+							newMatches.push(item);
+						});
+					});
+				} else {
+					// [number] => this is for picking an element from the array at a specific index
+					obj.forEach(function (match) {
+						var indexToGet = Number(arrayIndexDigit.value);
+						if (indexToGet < match.length) {
+							newMatches.push(match[indexToGet]);
+						}
+					});
+				}
 				matches = newMatches;
 			} else if (kid.id === 'BoundedAttributeExpression') {
 				var attrName = kid.children[1],

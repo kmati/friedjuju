@@ -70,7 +70,7 @@ var j2fTransformer = {
 		}
 	},
 
-	onNode: function (obj, parentObj) {
+	onNode: function (obj, parentObj, priorObj, ctxt) {
 		// get the bound functions (if there are any)
 		var boundFns = obj.__boundFns;
 		if (boundFns) {
@@ -79,21 +79,30 @@ var j2fTransformer = {
 
 			// invoke the bound functions and pass the obj to them
 			boundFns.forEach(function (fn) {
-				fn(obj, parentObj);
+				fn(obj, parentObj, priorObj, ctxt);
 			});
 		}
 	},
 
+	// Traverses an object graph and invokes functions that are bound to objects in the graph
 	// obj: The object to traverse
-	// parentObj: [OPTIONAL] The parent object
-	traverse: function (obj, parentObj) {
-		this.onNode(obj, parentObj);
+	// parentObj: The parent object
+	// priorObj: The last object that was traversed
+	// ctxt: The context object that can be modified by any of the bound functions if they need to
+	traverse: function (obj, parentObj, priorObj, ctxt) {
+		this.onNode(obj, parentObj, priorObj, ctxt);
 
+		// default the last object to the current object since it has just been traversed!
+		var lastObj = obj;
+
+		// process the children of the current object
 		for (var key in obj) {
 			var val = obj[key];
 			if (typeof val === 'object') {
-				this.traverse(val, obj);
+				this.traverse(val, obj, lastObj, ctxt);
 			}
+
+			lastObj = val;
 		}
 	}
 };
@@ -102,8 +111,10 @@ var j2fTransformer = {
  * j2f
  */
 var j2f = window.j2f = {
+	// Traverses an object graph and invokes functions that are bound to objects in the graph
 	// rootObj: The object to traverse
-	// mappingArray: The mapping array between expressions (Usages 2 and 3) and functions
+	// mappingArray: The mapping array between expressions (Usages 2 and 3) that match to objects in the graph and functions
+	// Returns: The context object (ctxt) that has been manipulated by the traversal functions
 	traverse: function (rootObj, mappingArray) {
 		if (!rootObj) {
 			return;
@@ -112,7 +123,9 @@ var j2f = window.j2f = {
 		var normalizedMap = j2fTransformer.normalizeMappingArray(mappingArray);
 
 		j2fTransformer.bind(rootObj, normalizedMap);
-		j2fTransformer.traverse(rootObj);
+		var ctxt = {};
+		j2fTransformer.traverse(rootObj, null, null, ctxt);
+		return ctxt;
 	}
 };
 

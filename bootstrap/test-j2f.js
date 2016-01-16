@@ -136,3 +136,28 @@ var printMap = {
 	}
 };
 j2f.traverse(rootObj, printMap);
+
+
+console.log();
+console.log('Computing sales using the context object:')
+console.log('-----------------------------------------');
+var salesData = {
+	sales: [
+		{ customer: { accountNo: 1234, name: 'Joe Smith' }, ytd: 129500 },
+		{ customer: { accountNo: 3742, name: 'Farina Pasta' }, ytd: 130000 },
+		{ customer: { accountNo: 2848, name: 'Chima Mango' }, ytd: 106000 },
+		{ customer: { accountNo: 5949, name: 'Hortense Skyne' }, ytd: 120000 },
+		{ customer: { accountNo: 2626, name: 'Wanda Mo' }, ytd: 95000 },
+	]
+};
+var salesMap = {
+	'sales[*]': function (salesObj, parentObj, priorObj, ctxt) {
+		if (typeof ctxt.totalSales === 'undefined') {
+			ctxt.totalSales = 0;
+		}
+		ctxt.totalSales += salesObj.ytd;
+	}
+};
+
+var salesResult = j2f.traverse(salesData, salesMap);
+console.log('Sales data result = ',salesResult);

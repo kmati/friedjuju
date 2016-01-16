@@ -26,7 +26,7 @@ var parser = {
 		BoundedAttributeDeclaration := '[' Attribute ']'
 		BoundedElementExpression := '[' ElementName '=' Char+ ']'
 		BoundedElementDeclaration := '[' ElementName ']'
-		ArrayIndex := '[' Digit+ ']'
+		ArrayIndex := '[' ( Digit+ | '*' ) ']'
 		Element := ElementName ElementTail?
 		ElementName := (Char & !Digit) Char*
 		ElementTail := ( BoundedAttributeExpression | BoundedAttributeDeclaration | BoundedElementExpression | BoundedElementDeclaration | ArrayIndex )+

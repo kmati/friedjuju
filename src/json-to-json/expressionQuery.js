@@ -206,12 +206,22 @@ var expressionQueryImpl = {
 			if (kid.id === 'ArrayIndex') {
 				var arrayIndexDigit = kid.children[1];
 				var newMatches = [];
-				obj.forEach(function (match) {
-					var indexToGet = Number(arrayIndexDigit.value);
-					if (indexToGet < match.length) {
-						newMatches.push(match[indexToGet]);
-					}
-				});
+				if (arrayIndexDigit.value === '*') {
+					// [*] => this is for picking all the elements of the array
+					obj.forEach(function (match) {
+						match.forEach(function (item) {
+							newMatches.push(item);
+						});
+					});
+				} else {
+					// [number] => this is for picking an element from the array at a specific index
+					obj.forEach(function (match) {
+						var indexToGet = Number(arrayIndexDigit.value);
+						if (indexToGet < match.length) {
+							newMatches.push(match[indexToGet]);
+						}
+					});
+				}
 				matches = newMatches;
 			} else if (kid.id === 'BoundedAttributeExpression') {
 				var attrName = kid.children[1],

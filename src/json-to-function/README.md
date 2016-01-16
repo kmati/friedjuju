@@ -241,10 +241,12 @@ You will notice here that there are 2 distinct String objects, i.e. ```foo.car``
 The bound functions that are associated with objects in the object graph have the following signature:
 
 ```
-Fn(obj, parentObj) -> void
+Fn(obj, parentObj, priorObj, ctxt) -> void
 ```
 
 where:
 * obj: is the current object in the traversal
 * parentObj: is the parent of the current object in the traversal
+* priorObj: is the last object that was traversed before the current one
+* ctxt: is a context object into which the bound functions can write state to, so as to share with downstream objects in the traversal
 

@@ -86,7 +86,7 @@ BoundedElementExpression := '[' ElementName '=' Char+ ']'
 
 BoundedElementDeclaration := '[' ElementName ']'
 
-ArrayIndex := '[' Digit+ ']'
+ArrayIndex := '[' ( Digit+ | '*' ) ']'
 
 Element := ElementName ElementTail?
 
@@ -120,7 +120,7 @@ BoundedElementExpression := '[' ElementName '=' Char+ ']'
 
 BoundedElementDeclaration := '[' ElementName ']'
 
-ArrayIndex := '[' Digit+ ']'
+ArrayIndex := '[' ( Digit+ | '*' ) ']'
 
 Element := ElementName ElementTail?
 
@@ -240,6 +240,18 @@ Example #15: The following will match all properties who key is 'foo' that conta
 
 ```
 foo[bar=some-value]
+```
+
+Example #16: The following will match the third element in 'foo'
+
+```
+foo[2]
+```
+
+Example #17: The following will match all the elements in 'foo'
+
+```
+foo[*]
 ```
 
 # Caveats

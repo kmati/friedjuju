@@ -150,7 +150,7 @@ var parser = {
 		BoundedAttributeDeclaration := '[' Attribute ']'
 		BoundedElementExpression := '[' ElementName '=' Char+ ']'
 		BoundedElementDeclaration := '[' ElementName ']'
-		ArrayIndex := '[' Digit+ ']'
+		ArrayIndex := '[' ( Digit+ | '*' ) ']'
 		Element := ElementName ElementTail?
 		ElementName := (Char & !Digit) Char*
 		ElementTail := ( BoundedAttributeExpression | BoundedAttributeDeclaration | BoundedElementExpression | BoundedElementDeclaration | ArrayIndex )+
@@ -560,7 +560,7 @@ var parserUtilsExtended = {
 		return undefined;
 	},
 
-	// ArrayIndex := '[' Digit+ ']'
+	// ArrayIndex := '[' ( Digit+ | '*' ) ']'
 	ArrayIndex: function (str, index) {
 		if (index >= str.length) {
 			return undefined;
@@ -573,6 +573,26 @@ var parserUtilsExtended = {
 		if (matchBracketOpen) {
 			index = matchBracketOpen.newIndex;
 			token.addChild(matchBracketOpen.token);
+
+			var matchStar = parserCommonFunctions.checkMatch(str, '*', index);
+			if (matchStar) {
+				index = matchStar.newIndex;
+				token.addChild(matchStar.token);
+
+				var matchBracketClose = parserCommonFunctions.checkMatch(str, ']', index);
+				if (matchBracketClose) {
+					index = matchBracketClose.newIndex;
+					token.addChild(matchBracketClose.token);
+
+					token.value = str.substring(originalIndex, index);
+					return {
+						newIndex: index,
+						token: token
+					};
+				}
+
+				return undefined;
+			}
 
 			var retDigits = parserCommonFunctions.repeat1Plus(str, index, 'Digit', this);
 			if (retDigits) {
