@@ -126,8 +126,15 @@ Handling the city | obj = Mordor
 From the above it is clear that the signature of the ```j2f.traverse``` method is:
 
 ```
-j2f.traverse(rootObj, mappingArray) -> void
+j2f.traverse(rootObj, mappingArray) -> ctxt
 ```
+
+where:
+
+* rootObj is the object that is at the root of the object graph to traverse
+* mappingArray is the object that contains the mappings between expressions and functions
+* ctxt is the context object that has been passed between the functions and is returned as the result of the ```j2f.traverse``` method call
+
 
 # Mapping Array or Mapping Object
 
