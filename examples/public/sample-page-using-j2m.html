@@ -8,8 +8,8 @@
 		var styles = {
 			'style.@type': 'text/css',
 			'style': 'body{ font-family: Arial; font-size: 12pt; color: #333; }\n' + 
-				'table{ background-color: #aaa; }\n' +
-				'.odd{ background-color: #777; }'
+				'table{ background-color: #ccf; }\n' +
+				'.odd{ background-color: #aaf; }'
 		};
 
 		/* 
@@ -22,21 +22,27 @@
 				'p': 'This is a simple page that will showcase some of the benefits of j2m.',
 				hr: null,
 				section: {
-					div: 'My section label',
-					'$1div': {
-						div: 'This is the section underneath the label',
-						'table.thead.tr.th': ['Person', 'Age'],
-						'table.tbody.$0tr': { '@class': 'odd', 'td': ['Joseph', 23] },
-						'table.tbody.$1tr': { '@class': 'even', 'td': ['Sally', 42] },
-						'table.tbody.$2tr': { '@class': 'odd', 'td': ['Mike', 78] }
-					}
+					div: [
+						'My section label',
+						{
+							p: 'This is the section underneath the label',
+							table: {
+								'thead.tr.th': ['Person', 'Age'],
+								tbody: {
+									'$0tr': { '@class': 'odd', '@style': 'color: #fff', 'td': ['Joseph', 23] },
+									'$1tr': { '@class': 'even', 'td': ['Sally', 42] },
+									'$2tr': { '@class': 'odd', 'td': ['Mike', 78] }
+								}
+							}
+						}
+					]
 				},
 			},
 			item2: {
-				'div': 'HELLO'
+				div: 'HELLO'
 			},
 			item3: {
-				'div': 'BYE'
+				div: 'BYE'
 			}
 		};
 
