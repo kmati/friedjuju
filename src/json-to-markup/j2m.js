@@ -41,6 +41,29 @@ var j2m = window.j2m = {
 			str += fnPrint.call(markupPrinter, ele);
 		});
 		return str;
+	},
+
+	// Generates a markup element from an object
+	// obj: The object to transform
+	// Returns: The markup element
+	generateElement: function (obj) {
+		return j2mTransformer.transform(obj);
+	},
+
+	// Generates the string markup from an element (that was returned from the j2mTransformer.transform method)
+	// Returns: The string that contains the markup
+	getMarkupFromElement: function (ele) {
+		var fnPrint = this.prettyPrint ? markupPrinter.prettyPrint : markupPrinter.print;
+
+		var str = '';
+		if (ele.tagName === '__ROOT__') {
+			ele.children.forEach(function (eleChild) {
+				str += fnPrint.call(markupPrinter, eleChild);
+			});
+		} else {
+			str += fnPrint.call(markupPrinter, ele);
+		}
+		return str;
 	}
 };
 

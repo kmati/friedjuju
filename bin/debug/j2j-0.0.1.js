@@ -82,7 +82,7 @@ var astEmitterImpl = {
 	},
 
 	emit: function (subscriptions, token) {
-		this.subscriptions.forEach(function (subscription) {
+		this.getSubscriptionsForToken(token).forEach(function (subscription) {
 			subscription.fnHandler(token);
 		});
 	}

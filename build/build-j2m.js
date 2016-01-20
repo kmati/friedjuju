@@ -52,6 +52,25 @@ function createBuilder() {
 		});
 	}
 
+	// Remove any text between the #DONT_BUILD_BEGIN and #DONT_BUILD_END directives
+	// content: The text
+	// Returns: The text without the content between the #DONT_BUILD_BEGIN and #DONT_BUILD_END directives
+	function removeDONT_BUILDSections(content) {
+		var oldI = -1;
+		while (true) {
+			var i = content.indexOf('#DONT_BUILD_BEGIN');
+			if (i === -1) break;
+
+			var j = content.indexOf('#DONT_BUILD_END');
+			if (j === -1) {
+				throw new Error('Did not find the corresponding #DONT_BUILD_END directive for the #DONT_BUILD_BEGIN at character position: ' + i);
+			}
+
+			content = content.substr(0, i) + content.substr(j + '#DONT_BUILD_END'.length);
+		}
+		return content;
+	}
+
 	// Invoked at the end of combineSrc to add the module.exports line at the end of the browserified code.
 	// This way we can simply use the browserified code in a node.js script.
 	// callback: void function (err)
@@ -59,6 +78,13 @@ function createBuilder() {
 		fs.readFile(ctxt.bundlePath, { encoding: 'utf8' }, function (err, content) {
 			if (err) {
 				callback(err);
+				return;
+			}
+
+			try {
+				content = removeDONT_BUILDSections(content);
+			} catch (e) {
+				callback(e);
 				return;
 			}
 

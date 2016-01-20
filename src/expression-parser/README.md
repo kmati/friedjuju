@@ -4,7 +4,10 @@ This is the recursive decent parser for the dot expressions that conform to the 
 
 # The 2 Grammars
 
-There are 2 grammars associated with friedjuju-- why would there be 1 when 2 would help make things more convoluted!?! The first grammar is called "Usage 1" and is used for the [j2m](../json-to-markup/ "j2m: Transform JSON to markup") tool. The second grammar is called "Usage 2 and 3" and is used for the [j2j](../json-to-json/ "j2j: Transform JSON to differently structured JSON or query JSON") tool.
+There are 2 grammars associated with friedjuju-- why would there be 1 when 2 would help make things more convoluted!?!
+
+1. The first grammar is called "Usage 1" and is used for the [j2m](../json-to-markup/ "j2m: Transform JSON to markup") tool.
+2. The second grammar is called "Usage 2 and 3" and is used for the [j2j](../json-to-json/ "j2j: Transform JSON to differently structured JSON or query JSON") tool.
 
 # The Grammar Spec
 

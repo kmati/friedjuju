@@ -22,11 +22,11 @@ var j2m = require('../src/json-to-markup/j2m.js');
 // 	'math.pi': 3.14
 // };
 
-var obj = {
-	'table.$0tr.td': ['Hydrogen', 'Helium'],
-	'table.$1tr.td': ['H', 'He'],
-	'table.$0tr.$0td.@style': 'color: red'
-};
+// var obj = {
+// 	'table.$0tr.td': ['Hydrogen', 'Helium'],
+// 	'table.$1tr.td': ['H', 'He'],
+// 	'table.$0tr.$0td.@style': 'color: red'
+// };
 
 var obj = {
 	"$1table.$0tr.th": ["Species", "Sizes"],
