@@ -72,6 +72,10 @@ AttrDiffItem.prototype = new DiffItem();
  * treeDiffImpl
  */
 var treeDiffImpl = {
+	// Gets an attribute of an Element instance by name
+	// ele: The Element instance
+	// attrName: The name of the attribute
+	// Returns: The attribute if found, else undefined
 	getAttributeByName: function (ele, attrName) {
 		for (var c = 0; c < ele.attributes.length; c++) {
 			var attr = ele.attributes[c];
@@ -82,11 +86,16 @@ var treeDiffImpl = {
 		return undefined;
 	},
 
+	// Compares 2 Element instances
+	// oldElePath: The path to the original Element instance
+	// oldEle: The original Element instance
+	// newElePath: The path to the new version of the Element instance
+	// newEle: The new version of the Element instance
+	// Returns: An array of diffs
 	compareElement: function (oldElePath, oldEle, newElePath, newEle) {
 		if (oldEle === newEle) {
 			// the elements are the same instance so there are no diffs!
 			return [];
-
 		}
 		var diffs = [];
 
@@ -183,6 +192,10 @@ var treeDiffImpl = {
  * treeDiff
  */
 var treeDiff = {
+	// Gets the diffs between two Element instances
+	// oldRootEle: The original Element instance
+	// newRootEle: The new version of the Element instance
+	// Returns: An array of diffs
 	diff: function (oldRootEle, newRootEle) {
 		var diffs = treeDiffImpl.compareElement(oldRootEle.tagName, oldRootEle, newRootEle.tagName, newRootEle);
 		return diffs;

@@ -336,6 +336,44 @@ var parserCommonFunctions = {
 		} else {
 			return undefined;
 		}
+	},
+
+	// Executes a sequence of productions
+	// str: The string to process
+	// index: The index at which to start the test
+	// productionNameArray: An array of production names
+	// ctxt: The object that contains the production functions
+	// tokenToBeReturned: The name of the token by which the resulting token will be labeled
+	// Returns: The { newIndex: number, token: Token } result if there is a match OR undefined
+	seq: function (str, index, productionNameArray, ctxt, tokenToBeReturned) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(tokenToBeReturned, '', index);
+
+
+		for (var c = 0; c < productionNameArray.length; c++) {
+			var productionName = productionNameArray[c];
+			var ret = ctxt[productionName](str, index);
+			if (!ret) {
+				return undefined;
+			}
+
+			index = ret.newIndex;
+			token.addChild(ret.token);
+		}
+
+		if (token.children.length > 0) {
+			token.value = str.substring(originalIndex, index);
+			return {
+				newIndex: index,
+				token: token
+			};
+		}
+
+		return undefined;		
 	}
 };
 
@@ -1440,14 +1478,8 @@ var j2m = window.j2m = {
 	// Transforms an object into markup and sets the markup into a DOM element
 	// obj: The object to transform
 	updateDOM: function (obj, domElement) {
-		var oldRootEle = j2mTransformer.envelopeDOMElement(domElement);
-		var newRootEle = this.generateElement(obj);
-
-		var treeDiff = require('../vdom/treeDiff.js');
-		var diffs = treeDiff.diff(oldRootEle, newRootEle);
-
-		var domWriter = require('../vdom/domWriter.js');
-		domWriter.writeDiffsToDOMElement(diffs, domElement);
+		var vdom = require('../vdom');
+		vdom.updateDOM(obj, domElement);
 	},
 
 	// Generates a markup element from an object
@@ -1479,7 +1511,7 @@ if (typeof module !== 'undefined') {
 	module.exports = j2m;
 }
 
-},{"../vdom/domWriter.js":15,"../vdom/treeDiff.js":17,"./j2mTransformer.js":11,"./markupPrinter.js":12}],11:[function(require,module,exports){
+},{"../vdom":16,"./j2mTransformer.js":11,"./markupPrinter.js":12}],11:[function(require,module,exports){
 require('./String-Extensions.js');
 var Attr = require('./Attr.js'),
 	Element = require('./Element.js'),
@@ -1654,7 +1686,7 @@ if (typeof module !== 'undefined') {
 	module.exports = j2mTransformer;
 }
 
-},{"../vdom/strippedDownMarkupParser.js":16,"./Attr.js":7,"./Element.js":8,"./String-Extensions.js":9,"./objectGraphCreator":13}],12:[function(require,module,exports){
+},{"../vdom/strippedDownMarkupParser.js":17,"./Attr.js":7,"./Element.js":8,"./String-Extensions.js":9,"./objectGraphCreator":13}],12:[function(require,module,exports){
 /* *******************
  * markupPrinter
  */
@@ -1801,13 +1833,15 @@ if (typeof module !== 'undefined') {
 },{"../expression-parser/astEmitter.js":2,"../expression-parser/ep.js":3}],14:[function(require,module,exports){
 (function (global){
 /*
- * This document is the document shim that is required by node.js but NOT needed for the web browser.
+ * The document shim is required by node.js but NOT needed for the web browser.
+ * It is used to simulate the document and ELEMENT APIs. However, only the methods that are required for j2m
+ * and vdom are actually implemented here!
  */
 
 // 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./strippedDownMarkupParser.js":16}],15:[function(require,module,exports){
+},{"./strippedDownMarkupParser.js":17}],15:[function(require,module,exports){
 /*
  * This module is used to write diffs to a DOM element
  */
@@ -1815,32 +1849,26 @@ if (typeof module !== 'undefined') {
 //
 
 var domWriterImpl = {
-	dottifyPathExpression: function (pathExpr) {
-		var normalizedPathExpr = pathExpr.replace('__ROOT__', '').replace(/\[/g, '\.').replace(/\]/g, '');
-		var arr = normalizedPathExpr.split('.');
-		if (arr.length > 0 && arr[0] === '') {
-			return arr.slice(1);
-		}
-		return arr;
-	},
-
-	setElementChild: function (ele, child) {
+	// Sets the innerHTML of a DOM element
+	// ele: The DOM element
+	// child: The string content or Element instance to be written to the innerHTML property of the DOM element
+	setElementInnerHTML: function (ele, child) {
 		if (typeof child === 'string') {
-			console.log('ele.innerHTML = "' + child + '"');
 			ele.innerHTML = child;
 		} else {
-			console.log('ele.innerHTML = "' + child.toString() + '"');
 			ele.innerHTML = child.toString();
 		}
 	},
 
+	// Writes a value to a path within an element
+	// pathArr: The path to the element or attribute to set in the DOM element
+	// ele: The DOM element
+	// valToSet: The value to set
 	writePathsToElementOrAttr: function (pathArr, ele, valToSet) {
 		pathArr.forEach(function (pathPiece) {
 			if (pathPiece[0] === '@') {
-				console.log('ele.setAttribute("' + pathPiece.substr(1) + '", "' + valToSet + '")');
 				ele.setAttribute(pathPiece.substr(1), valToSet);
 			} else if (pathPiece === '$str') {
-				console.log('ele.innerHTML = "' + valToSet + '"');
 				ele.innerHTML = valToSet;
 			} else {
 				var index = Number(pathPiece);
@@ -1849,7 +1877,7 @@ var domWriterImpl = {
 				} else {
 					// the only course of action is to append the valToSet to ele!
 					var stub = document.createElement('nop');
-					domWriterImpl.setElementChild(stub, valToSet);
+					domWriterImpl.setElementInnerHTML(stub, valToSet);
 
 					var lastCh = stub.childNodes[0];
 					ele.appendChild(lastCh);
@@ -1860,14 +1888,15 @@ var domWriterImpl = {
 		});
 	},
 
+	// Removes an element or attribute within an element
+	// pathArr: The path to the element or attribute to remove from the DOM element
+	// ele: The DOM element
 	unwritePathsToElementOrAttr: function (pathArr, ele) {
 		var lastEle, lastParent;
 		pathArr.forEach(function (pathPiece) {
 			if (pathPiece[0] === '@') {
-				console.log('ele.removeAttribute("' + pathPiece.substr(1) + '")');
 				ele.removeAttribute(pathPiece.substr(1));
 			} else if (pathPiece === '$str') {
-				console.log('ele.innerHTML = ""');
 				ele.innerHTML = '';
 			} else {
 				lastParent = ele;
@@ -1876,60 +1905,89 @@ var domWriterImpl = {
 					ele = ele.childNodes[Number(pathPiece)];
 				} else {
 					throw new Error('Cannot delete DOM element or attribute. No child found at index: ' + index);
-					// var lastCh;
-					// for (var i = ele.childNodes.length; i <= index; i++) {
-					// 	lastCh = document.createElement('nop');
-					// 	ele.appendChild(lastCh);
-					// }
-					// ele = lastCh;
 				}
 				lastEle = ele;
 			}
 		});
 
 		if (lastParent) {
-			console.log('lastParent.removeChild(lastEle)');
 			lastParent.removeChild(lastEle);
 		}
+	}
+};
+
+var diffCommander = {
+	// Takes a path expression from a diff and converts it to its constituent pieces
+	// pathExpr: A path to an element or attribute (that is part of the info in a diff) 
+	// Returns: An array whose elements are pieces in the path
+	// Examples:
+	// 	__ROOT__[0] => [0] (which means get the 1st child)
+	// 	__ROOT__[0][1] => [0, 1] (which means get the 2nd child of the 1st child)
+	// 	__ROOT__[0][0] => [0, 0] (which means get the 1st child of the 1st child)
+	// 	__ROOT__[0][1].@class => [0, 1, '@class'] (which means get the class attribute of the 2nd child of the 1st child)
+	dottifyPathExpression: function (pathExpr) {
+		var normalizedPathExpr = pathExpr.replace('__ROOT__', '').replace(/\[/g, '\.').replace(/\]/g, '');
+		var arr = normalizedPathExpr.split('.');
+		if (arr.length > 0 && arr[0] === '') {
+			return arr.slice(1);
+		}
+		return arr;
 	},
 
-	processDiff_add: function (diff, domElement) {
-		this.processDiff_set(diff, domElement);
+	// Adds content to a DOM element based on a diff
+	// diff: The diff to be used to add the content to the DOM element 
+	// domElement: The DOM element
+	add: function (diff, domElement) {
+		this.set(diff, domElement);
 	},
 
-	processDiff_delete: function (diff, domElement) {
+	// Deletes content from a DOM element based on a diff
+	// diff: The diff to be used to delete the content from the DOM element
+	// domElement: The DOM element
+	delete: function (diff, domElement) {
 		if (diff.pathToAttr) {
-			// find an element and then it's attr
+			// normalize the path to the attribute in an element
 			var pathArr = this.dottifyPathExpression(diff.pathToAttr);
-			this.unwritePathsToElementOrAttr(pathArr, domElement);
+			// delete the attribute
+			domWriterImpl.unwritePathsToElementOrAttr(pathArr, domElement);
 		} else if (diff.pathToEle) {
-			// find an element
+			// normalize the path to the element
 			var pathArr = this.dottifyPathExpression(diff.pathToEle);
-			this.unwritePathsToElementOrAttr(pathArr, domElement);
+			// delete the element
+			domWriterImpl.unwritePathsToElementOrAttr(pathArr, domElement);
 		}
 	},
 
-	processDiff_set: function (diff, domElement) {
+	// Modifies a DOM element by setting a value from a diff
+	// diff: The diff to be used to modify the DOM element
+	// domElement: The DOM element
+	set: function (diff, domElement) {
 		if (diff.pathToAttr) {
-			// find an element and then it's attr
+			// normalize the path to the attribute in an element
 			var pathArr = this.dottifyPathExpression(diff.pathToAttr);
-			this.writePathsToElementOrAttr(pathArr, domElement, diff.attr);
+			// set the attribute
+			domWriterImpl.writePathsToElementOrAttr(pathArr, domElement, diff.attr);
 		} else if (diff.pathToEle) {
-			// find an element
+			// normalize the path to the element
 			var pathArr = this.dottifyPathExpression(diff.pathToEle);
-			this.writePathsToElementOrAttr(pathArr, domElement, diff.ele);
+			// set the element
+			domWriterImpl.writePathsToElementOrAttr(pathArr, domElement, diff.ele);
 		}
 	}
-}
+};
 
 /* *******************
- * domWriter
+ * domWriter:
  */
 var domWriter = {
+	// Writes diffs to a DOM element
+	// The idea is to use the diffs to only change the affected parts of a DOM element rather than the whole DOM element.
+	// diffs: The diffs
+	// domElement: The DOM element
 	writeDiffsToDOMElement: function (diffs, domElement) {
 		diffs.forEach(function (diff) {
 			if (diff.changeType === 'add' || diff.changeType === 'delete' || diff.changeType === 'set') {
-				domWriterImpl['processDiff_' + diff.changeType](diff, domElement);
+				diffCommander[diff.changeType](diff, domElement);
 			} else {
 				throw new Error('Found an invalid changeType: ' + diff.changeType + ' | diff = ' + JSON.stringify(diff, undefined, 2));
 			}
@@ -1943,6 +2001,32 @@ if (typeof module !== 'undefined') {
 }
 
 },{"./document-shim.js":14}],16:[function(require,module,exports){
+/*
+ * This is the virtual DOM module
+ */
+var treeDiff = require('./treeDiff.js'),
+	domWriter = require('./domWriter.js'),
+	j2mTransformer = require('../json-to-markup/j2mTransformer.js');
+
+var vdom = {
+	// Transforms an object into markup and sets the markup into a DOM element
+	// obj: The object to transform
+	updateDOM: function (obj, domElement) {
+		var oldRootEle = j2mTransformer.envelopeDOMElement(domElement);
+		var newRootEle = j2mTransformer.transform(obj);
+
+		var diffs = treeDiff.diff(oldRootEle, newRootEle);
+
+		domWriter.writeDiffsToDOMElement(diffs, domElement);
+	},
+};
+
+if (typeof module !== 'undefined') {
+	// node.js export (if we're using node.js)
+	module.exports = vdom;
+}
+
+},{"../json-to-markup/j2mTransformer.js":11,"./domWriter.js":15,"./treeDiff.js":18}],17:[function(require,module,exports){
 /*
  * Simple stripped-down markup parser
  */
@@ -2311,37 +2395,7 @@ var strippedDownMarkupParserImpl = {
 			return undefined;
 		}
 
-		var originalIndex = index;
-		var token = new Token(Token.AttributeDeclaration, '', index);
-
-		// AttributeName
-		var retAttributeName = this.AttributeName(str, index);
-		if (retAttributeName) {
-			index = retAttributeName.newIndex;
-			token.addChild(retAttributeName.token);
-
-			// Eq
-			var retEq = this.Eq(str, index);
-			if (retEq) {
-				index = retEq.newIndex;
-				token.addChild(retEq.token);
-
-				// AttributeValue
-				var retAttributeValue = this.AttributeValue(str, index);
-				if (retAttributeValue) {
-					index = retAttributeValue.newIndex;
-					token.addChild(retAttributeValue.token);
-
-					token.value = str.substring(originalIndex, index);
-					return {
-						newIndex: index,
-						token: token
-					};
-				}
-			}
-		}
-
-		return undefined;
+		return parserCommonFunctions.seq(str, index, ['AttributeName', 'Eq', 'AttributeValue'], this, 'AttributeDeclaration');
 	},
 
 	// AttributeName := Chars
@@ -2409,37 +2463,7 @@ var strippedDownMarkupParserImpl = {
 			return undefined;
 		}
 
-		var originalIndex = index;
-		var token = new Token(Token.AttributeValue, '', index);
-
-		// Quote
-		var retQuoteOpen = this.Quote(str, index);
-		if (retQuoteOpen) {
-			index = retQuoteOpen.newIndex;
-			token.addChild(retQuoteOpen.token);
-
-			// AttributeValueString
-			var retAttributeValueString = this.AttributeValueString(str, index);
-			if (retAttributeValueString) {
-				index = retAttributeValueString.newIndex;
-				token.addChild(retAttributeValueString.token);
-
-				// 	Quuote
-				var retQuoteClosed = this.Quote(str, index);
-				if (retQuoteClosed) {
-					index = retQuoteClosed.newIndex;
-					token.addChild(retQuoteClosed.token);
-
-					token.value = str.substring(originalIndex, index);
-					return {
-						newIndex: index,
-						token: token
-					};
-				}
-			}
-		}
-
-		return undefined;
+		return parserCommonFunctions.seq(str, index, ['Quote', 'AttributeValueString', 'Quote'], this, 'AttributeValue');
 	},
 
 	// AttributeValueString := SpaceyChars
@@ -2693,7 +2717,7 @@ var markupRenderer = {
 
 		return rootEle;
 	}
-}
+};
 
 // The parser for markup content
 var strippedDownMarkupParser = {
@@ -2717,7 +2741,7 @@ if (typeof module !== 'undefined') {
 	module.exports = strippedDownMarkupParser;
 }
 
-},{"../expression-parser/Token.js":1,"../expression-parser/astEmitter.js":2,"../expression-parser/parserCommonFunctions.js":4,"../json-to-markup/Attr.js":7,"../json-to-markup/Element.js":8}],17:[function(require,module,exports){
+},{"../expression-parser/Token.js":1,"../expression-parser/astEmitter.js":2,"../expression-parser/parserCommonFunctions.js":4,"../json-to-markup/Attr.js":7,"../json-to-markup/Element.js":8}],18:[function(require,module,exports){
 /*
  * This module performs a tree diff of Element (and Attr) objects in 2 trees.
  * This is a work in progress on the way to implementing virtual dom functionality.
@@ -2792,6 +2816,10 @@ AttrDiffItem.prototype = new DiffItem();
  * treeDiffImpl
  */
 var treeDiffImpl = {
+	// Gets an attribute of an Element instance by name
+	// ele: The Element instance
+	// attrName: The name of the attribute
+	// Returns: The attribute if found, else undefined
 	getAttributeByName: function (ele, attrName) {
 		for (var c = 0; c < ele.attributes.length; c++) {
 			var attr = ele.attributes[c];
@@ -2802,11 +2830,16 @@ var treeDiffImpl = {
 		return undefined;
 	},
 
+	// Compares 2 Element instances
+	// oldElePath: The path to the original Element instance
+	// oldEle: The original Element instance
+	// newElePath: The path to the new version of the Element instance
+	// newEle: The new version of the Element instance
+	// Returns: An array of diffs
 	compareElement: function (oldElePath, oldEle, newElePath, newEle) {
 		if (oldEle === newEle) {
 			// the elements are the same instance so there are no diffs!
 			return [];
-
 		}
 		var diffs = [];
 
@@ -2903,6 +2936,10 @@ var treeDiffImpl = {
  * treeDiff
  */
 var treeDiff = {
+	// Gets the diffs between two Element instances
+	// oldRootEle: The original Element instance
+	// newRootEle: The new version of the Element instance
+	// Returns: An array of diffs
 	diff: function (oldRootEle, newRootEle) {
 		var diffs = treeDiffImpl.compareElement(oldRootEle.tagName, oldRootEle, newRootEle.tagName, newRootEle);
 		return diffs;

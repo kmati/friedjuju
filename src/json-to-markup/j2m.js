@@ -46,14 +46,8 @@ var j2m = window.j2m = {
 	// Transforms an object into markup and sets the markup into a DOM element
 	// obj: The object to transform
 	updateDOM: function (obj, domElement) {
-		var oldRootEle = j2mTransformer.envelopeDOMElement(domElement);
-		var newRootEle = this.generateElement(obj);
-
-		var treeDiff = require('../vdom/treeDiff.js');
-		var diffs = treeDiff.diff(oldRootEle, newRootEle);
-
-		var domWriter = require('../vdom/domWriter.js');
-		domWriter.writeDiffsToDOMElement(diffs, domElement);
+		var vdom = require('../vdom');
+		vdom.updateDOM(obj, domElement);
 	},
 
 	// Generates a markup element from an object

@@ -688,7 +688,7 @@ var markupRenderer = {
 
 		return rootEle;
 	}
-}
+};
 
 // The parser for markup content
 var strippedDownMarkupParser = {
