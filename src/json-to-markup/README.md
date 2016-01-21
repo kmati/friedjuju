@@ -205,9 +205,9 @@ Details about the syntax of the dot expressions can be found in the [ideas/idea-
 
 The friedjuju project contains a module called [vdom](../vdom) that provides virtual DOM support. For a full discussion on the subject, read the [vdom/README.md document](../vdom). Simply put, the vdom allows you to update sections of the DOM more efficiently than direct DOM manipulation.
 
-## Appendix ##
+# Appendix #
 
-# Gotcha: No top-level attribute declarations
+## Gotcha: No top-level attribute declarations
 
 Just like in typical markup, don't put an '@' prefix at the top level. All attributes should be enclosed within an object rather than top-level. This means:
 
@@ -239,7 +239,7 @@ In this case, ```result``` will be a String whose content is:
 <foo class="some-class"></foo>
 ```
 
-# Rules
+## Rules
 
 The following rules specify how the JSON is transformed into markup:
 
