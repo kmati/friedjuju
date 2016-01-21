@@ -34,16 +34,10 @@ var newRootEle = j2m.generateElement(objNew);
 console.log('oldRootEle = ' + j2m.getMarkupFromElement(oldRootEle));
 console.log('newRootEle = ' + j2m.getMarkupFromElement(newRootEle));
 
-
-var treeDiff = require('../src/vdom/treeDiff.js');
-var diffs = treeDiff.diff(oldRootEle, newRootEle);
-console.log('diffs = ' + JSON.stringify(diffs, undefined, 2));
-
-var domWriter = require('../src/vdom/domWriter.js');
-
+require('../src/vdom/document-shim.js');
 var domElement = document.createElement('div');
 domElement.innerHTML = j2m.getMarkupFromElement(oldRootEle);
 console.log('Before | domElement = ' + domElement.innerHTML);
 
-domWriter.writeDiffsToDOMElement(diffs, domElement);
+j2m.updateDOM(objNew, domElement);
 console.log('After | domElement = ' + domElement.innerHTML);

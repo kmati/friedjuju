@@ -43,6 +43,19 @@ var j2m = window.j2m = {
 		return str;
 	},
 
+	// Transforms an object into markup and sets the markup into a DOM element
+	// obj: The object to transform
+	updateDOM: function (obj, domElement) {
+		var oldRootEle = j2mTransformer.envelopeDOMElement(domElement);
+		var newRootEle = this.generateElement(obj);
+
+		var treeDiff = require('../vdom/treeDiff.js');
+		var diffs = treeDiff.diff(oldRootEle, newRootEle);
+
+		var domWriter = require('../vdom/domWriter.js');
+		domWriter.writeDiffsToDOMElement(diffs, domElement);
+	},
+
 	// Generates a markup element from an object
 	// obj: The object to transform
 	// Returns: The markup element

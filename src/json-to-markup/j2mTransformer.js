@@ -1,7 +1,9 @@
 require('./String-Extensions.js');
 var Attr = require('./Attr.js'),
 	Element = require('./Element.js'),
-	objectGraphCreator = require('./objectGraphCreator');
+	objectGraphCreator = require('./objectGraphCreator'),
+	strippedDownMarkupParser = require('../vdom/strippedDownMarkupParser.js');
+
 
 /* *******************
  * j2mTransformer: Used to perform the JSON to markup transformations.
@@ -38,6 +40,15 @@ var j2mTransformer = {
 
 		j2mTransformer.transformObjectToMarkup(obj, targetEle);
 		return targetEle;
+	},
+
+	// Normalizes a DOM element into an Element instance and wraps it in a __ROOT__ element
+	// domElement: The DOM element
+	// Returns: The Element instance
+	envelopeDOMElement: function (domElement) {
+		var rootEle = new Element('__ROOT__');
+		rootEle.addChild(strippedDownMarkupParser.parse(domElement.innerHTML));
+		return rootEle;
 	},
 
 	// Performs an identity transformation into markup, i.e. it simply returns the string

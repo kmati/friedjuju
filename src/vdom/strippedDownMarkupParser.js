@@ -3,7 +3,7 @@
  */
 
 /* Simple Stripped-Down Markup Grammar:
-	Element := Whitespaces? OpenTagStart AttributeDeclarations* ( (OpenTagStop Children? CloseTag) | ShortCloseTag ) Whitespaces?
+	Element := Whitespaces? OpenTagStart AttributeDeclarations? ( (OpenTagStop Children? CloseTag) | ShortCloseTag ) Whitespaces?
 	Children := ElementChildNode+
 	ElementChildNode := Element | ElementTextValue
 	ElementTextValue := SpaceyChars
@@ -33,7 +33,7 @@ var astEmitter = require('../expression-parser/astEmitter.js'),
 	Element = require('../json-to-markup/Element.js');
 
 var strippedDownMarkupParserImpl = {
-	// Element := Whitespaces? OpenTagStart AttributeDeclarations* ( (OpenTagStop Children? CloseTag) | ShortCloseTag ) Whitespaces?
+	// Element := Whitespaces? OpenTagStart AttributeDeclarations? ( (OpenTagStop Children? CloseTag) | ShortCloseTag ) Whitespaces?
 	Element: function (str, index) {
 		if (index >= str.length) {
 			return undefined;
@@ -58,7 +58,7 @@ var strippedDownMarkupParserImpl = {
 		index = retOpenTagStart.newIndex;
 		token.addChild(retOpenTagStart.token);
 
-		// AttributeDeclarations*
+		// AttributeDeclarations?
 		var retAttributeDeclarations = this.AttributeDeclarations(str, index);
 		if (retAttributeDeclarations) {
 			index = retAttributeDeclarations.newIndex;

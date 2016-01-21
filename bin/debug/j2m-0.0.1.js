@@ -1437,6 +1437,19 @@ var j2m = window.j2m = {
 		return str;
 	},
 
+	// Transforms an object into markup and sets the markup into a DOM element
+	// obj: The object to transform
+	updateDOM: function (obj, domElement) {
+		var oldRootEle = j2mTransformer.envelopeDOMElement(domElement);
+		var newRootEle = this.generateElement(obj);
+
+		var treeDiff = require('../vdom/treeDiff.js');
+		var diffs = treeDiff.diff(oldRootEle, newRootEle);
+
+		var domWriter = require('../vdom/domWriter.js');
+		domWriter.writeDiffsToDOMElement(diffs, domElement);
+	},
+
 	// Generates a markup element from an object
 	// obj: The object to transform
 	// Returns: The markup element
@@ -1466,11 +1479,13 @@ if (typeof module !== 'undefined') {
 	module.exports = j2m;
 }
 
-},{"./j2mTransformer.js":11,"./markupPrinter.js":12}],11:[function(require,module,exports){
+},{"../vdom/domWriter.js":15,"../vdom/treeDiff.js":17,"./j2mTransformer.js":11,"./markupPrinter.js":12}],11:[function(require,module,exports){
 require('./String-Extensions.js');
 var Attr = require('./Attr.js'),
 	Element = require('./Element.js'),
-	objectGraphCreator = require('./objectGraphCreator');
+	objectGraphCreator = require('./objectGraphCreator'),
+	strippedDownMarkupParser = require('../vdom/strippedDownMarkupParser.js');
+
 
 /* *******************
  * j2mTransformer: Used to perform the JSON to markup transformations.
@@ -1507,6 +1522,15 @@ var j2mTransformer = {
 
 		j2mTransformer.transformObjectToMarkup(obj, targetEle);
 		return targetEle;
+	},
+
+	// Normalizes a DOM element into an Element instance and wraps it in a __ROOT__ element
+	// domElement: The DOM element
+	// Returns: The Element instance
+	envelopeDOMElement: function (domElement) {
+		var rootEle = new Element('__ROOT__');
+		rootEle.addChild(strippedDownMarkupParser.parse(domElement.innerHTML));
+		return rootEle;
 	},
 
 	// Performs an identity transformation into markup, i.e. it simply returns the string
@@ -1630,7 +1654,7 @@ if (typeof module !== 'undefined') {
 	module.exports = j2mTransformer;
 }
 
-},{"./Attr.js":7,"./Element.js":8,"./String-Extensions.js":9,"./objectGraphCreator":13}],12:[function(require,module,exports){
+},{"../vdom/strippedDownMarkupParser.js":16,"./Attr.js":7,"./Element.js":8,"./String-Extensions.js":9,"./objectGraphCreator":13}],12:[function(require,module,exports){
 /* *******************
  * markupPrinter
  */
@@ -1774,7 +1798,1123 @@ if (typeof module !== 'undefined') {
 	module.exports = objectGraphCreator;
 }
 
-},{"../expression-parser/astEmitter.js":2,"../expression-parser/ep.js":3}]},{},[10]);
+},{"../expression-parser/astEmitter.js":2,"../expression-parser/ep.js":3}],14:[function(require,module,exports){
+(function (global){
+/*
+ * This document is the document shim that is required by node.js but NOT needed for the web browser.
+ */
+
+// 
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./strippedDownMarkupParser.js":16}],15:[function(require,module,exports){
+/*
+ * This module is used to write diffs to a DOM element
+ */
+
+//
+
+var domWriterImpl = {
+	dottifyPathExpression: function (pathExpr) {
+		var normalizedPathExpr = pathExpr.replace('__ROOT__', '').replace(/\[/g, '\.').replace(/\]/g, '');
+		var arr = normalizedPathExpr.split('.');
+		if (arr.length > 0 && arr[0] === '') {
+			return arr.slice(1);
+		}
+		return arr;
+	},
+
+	setElementChild: function (ele, child) {
+		if (typeof child === 'string') {
+			console.log('ele.innerHTML = "' + child + '"');
+			ele.innerHTML = child;
+		} else {
+			console.log('ele.innerHTML = "' + child.toString() + '"');
+			ele.innerHTML = child.toString();
+		}
+	},
+
+	writePathsToElementOrAttr: function (pathArr, ele, valToSet) {
+		pathArr.forEach(function (pathPiece) {
+			if (pathPiece[0] === '@') {
+				console.log('ele.setAttribute("' + pathPiece.substr(1) + '", "' + valToSet + '")');
+				ele.setAttribute(pathPiece.substr(1), valToSet);
+			} else if (pathPiece === '$str') {
+				console.log('ele.innerHTML = "' + valToSet + '"');
+				ele.innerHTML = valToSet;
+			} else {
+				var index = Number(pathPiece);
+				if (index < ele.childNodes.length) {
+					ele = ele.childNodes[Number(pathPiece)];
+				} else {
+					// the only course of action is to append the valToSet to ele!
+					var stub = document.createElement('nop');
+					domWriterImpl.setElementChild(stub, valToSet);
+
+					var lastCh = stub.childNodes[0];
+					ele.appendChild(lastCh);
+
+					ele = lastCh;
+				}
+			}
+		});
+	},
+
+	unwritePathsToElementOrAttr: function (pathArr, ele) {
+		var lastEle, lastParent;
+		pathArr.forEach(function (pathPiece) {
+			if (pathPiece[0] === '@') {
+				console.log('ele.removeAttribute("' + pathPiece.substr(1) + '")');
+				ele.removeAttribute(pathPiece.substr(1));
+			} else if (pathPiece === '$str') {
+				console.log('ele.innerHTML = ""');
+				ele.innerHTML = '';
+			} else {
+				lastParent = ele;
+				var index = Number(pathPiece);
+				if (index < ele.childNodes.length) {
+					ele = ele.childNodes[Number(pathPiece)];
+				} else {
+					throw new Error('Cannot delete DOM element or attribute. No child found at index: ' + index);
+					// var lastCh;
+					// for (var i = ele.childNodes.length; i <= index; i++) {
+					// 	lastCh = document.createElement('nop');
+					// 	ele.appendChild(lastCh);
+					// }
+					// ele = lastCh;
+				}
+				lastEle = ele;
+			}
+		});
+
+		if (lastParent) {
+			console.log('lastParent.removeChild(lastEle)');
+			lastParent.removeChild(lastEle);
+		}
+	},
+
+	processDiff_add: function (diff, domElement) {
+		this.processDiff_set(diff, domElement);
+	},
+
+	processDiff_delete: function (diff, domElement) {
+		if (diff.pathToAttr) {
+			// find an element and then it's attr
+			var pathArr = this.dottifyPathExpression(diff.pathToAttr);
+			this.unwritePathsToElementOrAttr(pathArr, domElement);
+		} else if (diff.pathToEle) {
+			// find an element
+			var pathArr = this.dottifyPathExpression(diff.pathToEle);
+			this.unwritePathsToElementOrAttr(pathArr, domElement);
+		}
+	},
+
+	processDiff_set: function (diff, domElement) {
+		if (diff.pathToAttr) {
+			// find an element and then it's attr
+			var pathArr = this.dottifyPathExpression(diff.pathToAttr);
+			this.writePathsToElementOrAttr(pathArr, domElement, diff.attr);
+		} else if (diff.pathToEle) {
+			// find an element
+			var pathArr = this.dottifyPathExpression(diff.pathToEle);
+			this.writePathsToElementOrAttr(pathArr, domElement, diff.ele);
+		}
+	}
+}
+
+/* *******************
+ * domWriter
+ */
+var domWriter = {
+	writeDiffsToDOMElement: function (diffs, domElement) {
+		diffs.forEach(function (diff) {
+			if (diff.changeType === 'add' || diff.changeType === 'delete' || diff.changeType === 'set') {
+				domWriterImpl['processDiff_' + diff.changeType](diff, domElement);
+			} else {
+				throw new Error('Found an invalid changeType: ' + diff.changeType + ' | diff = ' + JSON.stringify(diff, undefined, 2));
+			}
+		});
+	}
+};
+
+if (typeof module !== 'undefined') {
+	// node.js export (if we're using node.js)
+	module.exports = domWriter;
+}
+
+},{"./document-shim.js":14}],16:[function(require,module,exports){
+/*
+ * Simple stripped-down markup parser
+ */
+
+/* Simple Stripped-Down Markup Grammar:
+	Element := Whitespaces? OpenTagStart AttributeDeclarations? ( (OpenTagStop Children? CloseTag) | ShortCloseTag ) Whitespaces?
+	Children := ElementChildNode+
+	ElementChildNode := Element | ElementTextValue
+	ElementTextValue := SpaceyChars
+	OpenTagStart := '<' TagName
+	OpenTagStop := '>'
+	CloseTag := '</' TagName '>'
+	ShortCloseTag := '/>'
+	TagName := Chars
+	AttributeDeclarations := ( Whitespaces AttributeDeclaration )+
+	AttributeDeclaration := AttributeName Eq AttributeValue
+	AttributeName := Chars
+	Eq := '='
+	Quote := '"'
+	AttributeValue := Quote AttributeValueString Quote
+	AttributeValueString := SpaceyChars
+	Whitespaces := Whitespace+
+	Whitespace := ' ' | '\r' | '\n' | '\t'
+	Chars := Char+
+	Char := !Whitespace & SpaceyChar
+	SpaceyChars := SpaceyChar+
+	SpaceyChar := !Eq & !Quote & '\'' & !'[' & !']' & !'(' & !')' & !'<' & !'>' & !'/'
+ */
+var astEmitter = require('../expression-parser/astEmitter.js'),
+	Token = require('../expression-parser/Token.js'),
+	parserCommonFunctions = require('../expression-parser/parserCommonFunctions.js'),
+	Attr = require('../json-to-markup/Attr.js'),
+	Element = require('../json-to-markup/Element.js');
+
+var strippedDownMarkupParserImpl = {
+	// Element := Whitespaces? OpenTagStart AttributeDeclarations? ( (OpenTagStop Children? CloseTag) | ShortCloseTag ) Whitespaces?
+	Element: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.Element, '', index);
+
+		// Whitespaces?
+		var retWhitespaces = this.Whitespaces(str, index);
+		if (retWhitespaces) {
+			index = retWhitespaces.newIndex;
+			token.addChild(retWhitespaces.token);
+		}
+
+		// OpenTagStart
+		var retOpenTagStart = this.OpenTagStart(str, index);
+		if (!retOpenTagStart) {
+			return undefined;
+		}
+
+		index = retOpenTagStart.newIndex;
+		token.addChild(retOpenTagStart.token);
+
+		// AttributeDeclarations?
+		var retAttributeDeclarations = this.AttributeDeclarations(str, index);
+		if (retAttributeDeclarations) {
+			index = retAttributeDeclarations.newIndex;
+			token.addChild(retAttributeDeclarations.token);
+		}
+
+		// ShortCloseTag
+		var retShortCloseTag = this.ShortCloseTag(str, index);
+		if (retShortCloseTag) {
+			index = retShortCloseTag.newIndex;
+			token.addChild(retShortCloseTag.token);
+
+			// Whitespaces?
+			retWhitespaces = this.Whitespaces(str, index);
+			if (retWhitespaces) {
+				index = retWhitespaces.newIndex;
+				token.addChild(retWhitespaces.token);
+			}
+
+			token.value = str.substring(originalIndex, index);
+			return {
+				newIndex: index,
+				token: token
+			};			
+		}
+
+		// OpenTagStop
+		var retOpenTagStop = this.OpenTagStop(str, index);
+		if (retOpenTagStop) {
+			index = retOpenTagStop.newIndex;
+			token.addChild(retOpenTagStop.token);
+
+			// Children
+			var retChildren = this.Children(str, index);
+			if (retChildren) {
+				index = retChildren.newIndex;
+				token.addChild(retChildren.token);
+
+				// CloseTag
+				var retCloseTag = this.CloseTag(str, index);
+				if (retCloseTag) {
+					index = retCloseTag.newIndex;
+					token.addChild(retCloseTag.token);
+
+					// Whitespaces?
+					retWhitespaces = this.Whitespaces(str, index);
+					if (retWhitespaces) {
+						index = retWhitespaces.newIndex;
+						token.addChild(retWhitespaces.token);
+					}
+
+					token.value = str.substring(originalIndex, index);
+					return {
+						newIndex: index,
+						token: token
+					};
+				}
+			}
+		}
+
+		return undefined;
+	},
+
+	// 	Children := ElementChildNode+
+	Children: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.Children, '', index);
+
+		var retElementChildNode = parserCommonFunctions.repeat1Plus(str, index, 'ElementChildNode', this);
+		if (retElementChildNode) {
+			index = retElementChildNode.newIndex;
+			token.addChild(retElementChildNode.token);
+
+			token.value = str.substring(originalIndex, index);
+			return {
+				newIndex: index,
+				token: token
+			};
+		}
+
+		return undefined;
+	},
+
+	// ElementChildNode := Element | ElementTextValue
+	ElementChildNode: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		return parserCommonFunctions.or(str, index, 
+			['Element', 'ElementTextValue'],
+			this, 'ElementChildNode');
+	},
+
+	// ElementTextValue := SpaceyChars
+	ElementTextValue: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.ElementTextValue, '', index);
+
+		// SpaceyChars
+		var retSpaceyChars = this.SpaceyChars(str, index);
+		if (retSpaceyChars) {
+			index = retSpaceyChars.newIndex;
+			token.addChild(retSpaceyChars.token);
+
+			token.value = str.substring(originalIndex, index);
+			return {
+				newIndex: index,
+				token: token
+			};
+		}
+
+		return undefined;
+	},
+
+	// OpenTagStart := '<' TagName
+	OpenTagStart: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.OpenTagStart, '', index);
+
+		// <
+		var matchOpenAngleBracket = parserCommonFunctions.checkMatch(str, '<', index);
+		if (matchOpenAngleBracket) {
+			index = matchOpenAngleBracket.newIndex;
+			token.addChild(matchOpenAngleBracket.token);
+
+			// TagName
+			var retTagName = this.TagName(str, index);
+			if (retTagName) {
+				index = retTagName.newIndex;
+				token.addChild(retTagName.token);
+
+				token.value = str.substring(originalIndex, index);
+				return {
+					newIndex: index,
+					token: token
+				};
+			}
+		}
+
+		return undefined;
+	},
+
+	// OpenTagStop := '>'
+	OpenTagStop: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var ret = parserCommonFunctions.checkMatch(str, '>', index);
+		if (!ret) {
+			return undefined;
+		}
+
+		return {
+			newIndex: index + 1,
+			token: new Token(Token.OpenTagStop, str.substr(index, 1), index)
+		}
+	},
+
+	// CloseTag := '</' TagName '>'
+	CloseTag: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.CloseTag, '', index);
+
+		// </
+		var matchOpenAngleBracket = parserCommonFunctions.checkMatch(str, '</', index);
+		if (matchOpenAngleBracket) {
+			index = matchOpenAngleBracket.newIndex;
+			token.addChild(matchOpenAngleBracket.token);
+
+			// TagName
+			var retTagName = this.TagName(str, index);
+			if (retTagName) {
+				index = retTagName.newIndex;
+				token.addChild(retTagName.token);
+
+				// >
+				var matchCloseAngleBracket = parserCommonFunctions.checkMatch(str, '>', index);
+				if (matchCloseAngleBracket) {
+					index = matchCloseAngleBracket.newIndex;
+					token.addChild(matchCloseAngleBracket.token);
+
+					token.value = str.substring(originalIndex, index);
+					return {
+						newIndex: index,
+						token: token
+					};
+				}
+			}
+		}
+
+		return undefined;
+	},
+
+	// ShortCloseTag := '/>'
+	ShortCloseTag: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var ret = parserCommonFunctions.checkMatch(str, '/>', index);
+		if (!ret) {
+			return undefined;
+		}
+
+		return {
+			newIndex: index + 2,
+			token: new Token(Token.ShortCloseTag, str.substr(index, 2), index)
+		}
+	},
+
+	// TagName := Chars
+	TagName: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.TagName, '', index);
+
+		// Chars
+		var retChars = this.Chars(str, index);
+		if (retChars) {
+			index = retChars.newIndex;
+			token.addChild(retChars.token);
+
+			token.value = str.substring(originalIndex, index);
+			return {
+				newIndex: index,
+				token: token
+			};
+		}
+
+		return undefined;
+	},
+
+	// AttributeDeclarations := ( Whitespaces AttributeDeclaration )+
+	AttributeDeclarations: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.AttributeDeclarations, '', index);
+
+		var self = this;
+		function nucleus() {
+			// Whitespaces
+			var retWhitespaces = self.Whitespaces(str, index);
+			if (retWhitespaces) {
+				index = retWhitespaces.newIndex;
+				token.addChild(retWhitespaces.token);
+
+				// AttributeDeclaration
+				var retAttributeDeclaration = self.AttributeDeclaration(str, index);
+				if (retAttributeDeclaration) {
+					index = retAttributeDeclaration.newIndex;
+					token.addChild(retAttributeDeclaration.token);
+
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		if (!nucleus()) {
+			return undefined;
+		}
+
+		while (index < str.length && nucleus()) {
+		}
+
+		if (token.children.length > 0) {
+			token.value = str.substring(originalIndex, index);
+			return {
+				newIndex: index,
+				token: token
+			};
+		}
+
+		return undefined;
+	},
+
+	// AttributeDeclaration := AttributeName Eq AttributeValue
+	AttributeDeclaration: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.AttributeDeclaration, '', index);
+
+		// AttributeName
+		var retAttributeName = this.AttributeName(str, index);
+		if (retAttributeName) {
+			index = retAttributeName.newIndex;
+			token.addChild(retAttributeName.token);
+
+			// Eq
+			var retEq = this.Eq(str, index);
+			if (retEq) {
+				index = retEq.newIndex;
+				token.addChild(retEq.token);
+
+				// AttributeValue
+				var retAttributeValue = this.AttributeValue(str, index);
+				if (retAttributeValue) {
+					index = retAttributeValue.newIndex;
+					token.addChild(retAttributeValue.token);
+
+					token.value = str.substring(originalIndex, index);
+					return {
+						newIndex: index,
+						token: token
+					};
+				}
+			}
+		}
+
+		return undefined;
+	},
+
+	// AttributeName := Chars
+	AttributeName: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.AttributeName, '', index);
+
+		// Chars
+		var retChars = this.Chars(str, index);
+		if (retChars) {
+			index = retChars.newIndex;
+			token.addChild(retChars.token);
+
+			token.value = str.substring(originalIndex, index);
+			return {
+				newIndex: index,
+				token: token
+			};
+		}
+
+		return undefined;
+	},
+
+	// Eq := '='
+	Eq: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var ret = parserCommonFunctions.checkMatch(str, '=', index);
+		if (!ret) {
+			return undefined;
+		}
+
+		return {
+			newIndex: index + 1,
+			token: new Token(Token.Eq, str.substr(index, 1), index)
+		}
+	},
+
+	// Quote := '"'
+	Quote: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var ret = parserCommonFunctions.checkMatch(str, '"', index);
+		if (!ret) {
+			return undefined;
+		}
+
+		return {
+			newIndex: index + 1,
+			token: new Token(Token.Quote, str.substr(index, 1), index)
+		}
+	},
+
+	// AttributeValue := Quote AttributeValueString Quote
+	AttributeValue: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.AttributeValue, '', index);
+
+		// Quote
+		var retQuoteOpen = this.Quote(str, index);
+		if (retQuoteOpen) {
+			index = retQuoteOpen.newIndex;
+			token.addChild(retQuoteOpen.token);
+
+			// AttributeValueString
+			var retAttributeValueString = this.AttributeValueString(str, index);
+			if (retAttributeValueString) {
+				index = retAttributeValueString.newIndex;
+				token.addChild(retAttributeValueString.token);
+
+				// 	Quuote
+				var retQuoteClosed = this.Quote(str, index);
+				if (retQuoteClosed) {
+					index = retQuoteClosed.newIndex;
+					token.addChild(retQuoteClosed.token);
+
+					token.value = str.substring(originalIndex, index);
+					return {
+						newIndex: index,
+						token: token
+					};
+				}
+			}
+		}
+
+		return undefined;
+	},
+
+	// AttributeValueString := SpaceyChars
+	AttributeValueString: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.AttributeValueString, '', index);
+
+		// SpaceyChars
+		var retSpaceyChars = this.SpaceyChars(str, index);
+		if (retSpaceyChars) {
+			index = retSpaceyChars.newIndex;
+			token.addChild(retSpaceyChars.token);
+
+			token.value = str.substring(originalIndex, index);
+			return {
+				newIndex: index,
+				token: token
+			};
+		}
+
+		return undefined;
+	},
+
+	// Whitespaces := Whitespace+
+	Whitespaces: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.Whitespaces, '', index);
+		var retWhitespaces = parserCommonFunctions.repeat1Plus(str, index, 'Whitespace', this);
+		if (retWhitespaces) {
+			index = retWhitespaces.newIndex;
+			token.addChild(retWhitespaces.token);
+		}
+
+		if (token.children.length > 0) {
+			token.value = str.substring(originalIndex, index);
+			return {
+				newIndex: index,
+				token: token
+			};
+		}
+
+		return undefined;
+
+	},
+
+	// Whitespace := ' ' | '\r' | '\n' | '\t'
+	Whitespace: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var succeeded = false;
+		[' ', '\r', '\n', '\t'].forEach(function (ch) {
+			var ret = parserCommonFunctions.checkMatch(str, ch, index);
+			if (ret) {
+				succeeded = true;
+				return;
+			}
+		});
+		if (succeeded) {
+			return {
+				newIndex: index + 1,
+				token: new Token(Token.Whitespace, str.substr(index, 1), index)
+			}
+		} else {
+			return undefined;
+		}
+	},
+
+	// Chars := Char+
+	Chars: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.Chars, '', index);
+		var retChars = parserCommonFunctions.repeat1Plus(str, index, 'Char', this);
+		if (retChars) {
+			index = retChars.newIndex;
+			token.addChild(retChars.token);
+		}
+
+		if (token.children.length > 0) {
+			token.value = str.substring(originalIndex, index);
+			return {
+				newIndex: index,
+				token: token
+			};
+		}
+
+		return undefined;
+	},
+
+	// Char := !Whitespace & SpaceyChar
+	Char: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var ret = this.Whitespace(str, index);
+		if (ret) {
+			return undefined;
+		}
+		ret = this.SpaceyChar(str, index);
+		if (!ret) {
+			return undefined;
+		}
+
+		return {
+			newIndex: index + 1,
+			token: new Token(Token.Char, str.substr(index, 1), index)
+		}
+	},
+
+	// SpaceyChars := SpaceyChar+
+	SpaceyChars: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(Token.SpaceyChars, '', index);
+		var retSpaceyChars = parserCommonFunctions.repeat1Plus(str, index, 'SpaceyChar', this);
+		if (retSpaceyChars) {
+			index = retSpaceyChars.newIndex;
+			token.addChild(retSpaceyChars.token);
+		}
+
+		if (token.children.length > 0) {
+			token.value = str.substring(originalIndex, index);
+			return {
+				newIndex: index,
+				token: token
+			};
+		}
+
+		return undefined;
+	},
+
+	// SpaceyChar := !Eq & !Quote & '\'' & !'[' & !']' & !'(' & !')' & !'<' & !'>' & !'/'
+	SpaceyChar: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var ret = this.Eq(str, index);
+		if (ret) {
+			return undefined;
+		}
+		ret = this.Quote(str, index);
+		if (ret) {
+			return undefined;
+		}
+		ret = parserCommonFunctions.checkMatch(str, '\'', index);
+		if (ret) {
+			return undefined;
+		}
+		ret = parserCommonFunctions.checkMatch(str, '[', index);
+		if (ret) {
+			return undefined;
+		}
+		ret = parserCommonFunctions.checkMatch(str, ']', index);
+		if (ret) {
+			return undefined;
+		}
+		ret = parserCommonFunctions.checkMatch(str, '(', index);
+		if (ret) {
+			return undefined;
+		}
+		ret = parserCommonFunctions.checkMatch(str, ')', index);
+		if (ret) {
+			return undefined;
+		}
+		ret = parserCommonFunctions.checkMatch(str, '<', index);
+		if (ret) {
+			return undefined;
+		}
+		ret = parserCommonFunctions.checkMatch(str, '>', index);
+		if (ret) {
+			return undefined;
+		}
+		ret = parserCommonFunctions.checkMatch(str, '/', index);
+		if (ret) {
+			return undefined;
+		}
+
+		return {
+			newIndex: index + 1,
+			token: new Token(Token.SpaceyChar, str.substr(index, 1), index)
+		}
+	}
+};
+
+// this is here to add the declarations of static token enums:
+// e.g. Token.Element
+for (var key in strippedDownMarkupParserImpl) {
+	Token[key] = key;
+}
+
+var markupRenderer = {
+	// Transforms a token tree of an element and transforms it into an Element instance
+	// tokenElement: The AST token for the element tree
+	// Returns: The Element instance
+	render: function (tokenElement) {
+		var rootEle;
+		var elements = [];
+
+		astEmitter.subscribe(['OpenTagStart'], function (token) {
+			var tagName = token.children[1].value;
+			var ele = new Element(tagName);
+			if (!rootEle) {
+				rootEle = ele;
+			}
+
+			var parentEle;
+			if (elements.length > 0) {
+				parentEle = elements[elements.length - 1];
+				parentEle.addChild(ele);
+			}
+			elements.push(ele);
+		});
+
+		astEmitter.subscribe(['AttributeDeclaration'], function (token) {
+			var attrName = token.children[0].value,
+				attrValue = token.children[2].children[1].value;
+
+			var ele = elements[elements.length - 1];
+			ele.addAttr(new Attr(attrName, attrValue));
+		});
+
+		astEmitter.subscribe(['ElementTextValue'], function (token) {
+			var textVal = token.value;
+			var ele = elements[elements.length - 1];
+			ele.addChild(textVal);
+		});
+
+		astEmitter.subscribe(['ShortCloseTag', 'CloseTag'], function (token) {
+			// pop off the current element so that the last item in elements is the parent!
+			elements.pop();
+		});
+		astEmitter.traverse(tokenElement.token);
+
+		return rootEle;
+	}
+}
+
+// The parser for markup content
+var strippedDownMarkupParser = {
+	// Parses a markup string
+	// str: A markup string
+	// Returns: The root Element instance
+	parse: function (str) {
+		var index = 0;
+		var tokenElement = strippedDownMarkupParserImpl.Element(str, index);
+		if (tokenElement.newIndex < str.length) {
+			throw new Error('Unparsed characters exist at the end of the markup string: ' + str.substr(tokenElement.newIndex));
+		}
+
+		var rootEle = markupRenderer.render(tokenElement);
+		return rootEle;
+	}
+};
+
+if (typeof module !== 'undefined') {
+	// node.js export (if we're using node.js)
+	module.exports = strippedDownMarkupParser;
+}
+
+},{"../expression-parser/Token.js":1,"../expression-parser/astEmitter.js":2,"../expression-parser/parserCommonFunctions.js":4,"../json-to-markup/Attr.js":7,"../json-to-markup/Element.js":8}],17:[function(require,module,exports){
+/*
+ * This module performs a tree diff of Element (and Attr) objects in 2 trees.
+ * This is a work in progress on the way to implementing virtual dom functionality.
+ */
+
+var Element = require('../json-to-markup/Element');
+
+/* *******************
+ * DiffItem
+ */
+// A diff item which represents a specific change between and old and new version of a tree
+// examples of diffItem instances =>
+// 	1. Change a value in an element
+//		rootEle/persons[0]/age, delete, 23 +---> rootEle/persons[0]/age, set, 32
+//		rootEle/persons[0]/age, add, 32	   |
+//
+//		OR
+//	   Change an attribute
+//		rootEle/persons[0].@class, delete, 'myclass' +---> rootEle/persons[0].@class, set, 'yourclass'
+//		rootEle/persons[0].@class, add, 'yourclass'  |
+//
+//	2. Remove an element
+//		rootEle/persons[0], delete, <no need to add what the element was in the old tree>
+//
+//		OR
+//	   Remove an attribute
+//		rootEle/persons[0].@class, delete, <no need to add what the attribute was in the old tree>
+//
+//	3. Add an element
+//		rootEle/persons[7], add, {actual element definition}
+//
+//		OR
+//	   Change an attribute
+//		rootEle/persons[0].@class, add, 'yourclass'
+function DiffItem() {}
+
+/* *******************
+ * ElementDiffItem
+ */
+function ElementDiffItem(pathToEle, changeType, ele) {
+	this.pathToEle = pathToEle;
+	this.changeType = changeType;
+	this.ele = ele;
+}
+
+ElementDiffItem.prototype = new DiffItem();
+
+/* *******************
+ * ElementTagNameDiffItem
+ */
+function ElementTagNameDiffItem(pathToEle, changeType, tagName) {
+	this.pathToEle = pathToEle;
+	this.changeType = changeType;
+	this.tagName = tagName;
+}
+
+ElementTagNameDiffItem.prototype = new DiffItem();
+
+/* *******************
+ * AttrDiffItem
+ */
+function AttrDiffItem(pathToAttr, changeType, attr) {
+	this.pathToAttr = pathToAttr;
+	this.changeType = changeType;
+	this.attr = attr;
+}
+
+AttrDiffItem.prototype = new DiffItem();
+
+
+/* *******************
+ * treeDiffImpl
+ */
+var treeDiffImpl = {
+	getAttributeByName: function (ele, attrName) {
+		for (var c = 0; c < ele.attributes.length; c++) {
+			var attr = ele.attributes[c];
+			if (attr.name === attrName) {
+				return attr;
+			}
+		}
+		return undefined;
+	},
+
+	compareElement: function (oldElePath, oldEle, newElePath, newEle) {
+		if (oldEle === newEle) {
+			// the elements are the same instance so there are no diffs!
+			return [];
+
+		}
+		var diffs = [];
+
+		// compare tagName
+		if (oldEle.tagName !== newEle.tagName) {
+			// tagName changed
+			var diffItem = new ElementTagNameDiffItem(oldElePath, 'set', newEle.tagName);
+			diffs.push(diffItem);
+		}
+
+		// compare attributes
+		var handledAttrs = [];
+		oldEle.attributes.forEach(function (oldAttr) {
+			var newAttr = treeDiffImpl.getAttributeByName(newEle, oldAttr.name);
+			if (!newAttr) {
+				// attr is deleted
+				var diffItem = new AttrDiffItem(oldElePath + '.@' + oldAttr.name, 'delete', null);
+				diffs.push(diffItem);
+			} else if (oldAttr.value !== newAttr.value) {
+				// attr edited
+				var diffItem = new AttrDiffItem(oldElePath + '.@' + oldAttr.name, 'set', newAttr.value);
+				diffs.push(diffItem);
+				handledAttrs.push(newAttr);
+			}
+		});
+
+		newEle.attributes.forEach(function (newAttr) {
+			if (handledAttrs.indexOf(newAttr) === -1) {
+				// we have not handled this attr before so it must be new!
+				var diffItem = new AttrDiffItem(oldElePath + '.@' + newAttr.name, 'add', newAttr.value);
+				diffs.push(diffItem);
+			}
+		});
+
+		// compare children
+		var oldIndex = 0, newIndex = 0;
+		while (oldIndex < oldEle.children.length && newIndex < newEle.children.length) {
+			var oldChild = oldEle.children[oldIndex],
+				newChild = newEle.children[newIndex];
+
+			var areChildrenSame = true;
+			if (typeof oldChild === 'string' && typeof newChild === 'string') {
+				if (oldChild !== newChild) {
+					// $str values are different
+					var diffItem = new ElementDiffItem(oldElePath + '.$str', 'set', newChild);
+					diffs.push(diffItem);
+					areChildrenSame = false;
+				}
+			} else if (typeof oldChild === 'string' && newChild instanceof Element) {
+				// $str is replaced by a real child
+				diffs.push(new ElementDiffItem(oldElePath + '.$str', 'delete', null));
+				diffs.push(new ElementDiffItem(oldElePath + '[' + oldIndex + ']', 'add', newChild));
+				areChildrenSame = false;
+			} else if (typeof oldChild instanceof Element && typeof newChild === 'string') {
+				// child is replaced by $str value
+				diffs.push(new ElementDiffItem(oldElePath + '[' + oldIndex + ']', 'delete', null));
+				diffs.push(new ElementDiffItem(oldElePath + '.$str', 'add', newChild));
+				areChildrenSame = false;
+			} else {
+				// oldChild & newChild are elements
+
+			}
+
+			if (areChildrenSame) {
+				var childDiffs = this.compareElement(oldElePath + '[' + oldIndex + ']', oldChild, newElePath + '[' + newIndex + ']', newChild);
+				childDiffs.forEach(function (childDiff) {
+					diffs.push(childDiff);
+				});
+			}
+
+			oldIndex++;
+			newIndex++;
+		}
+
+		if (oldIndex >= oldEle.children.length) {
+			// add in the extra new children
+			while (newIndex < newEle.children.length) {
+				diffs.push(new ElementDiffItem(oldElePath + '[' + newIndex + ']', 'add', newEle.children[newIndex]));
+				newIndex++;
+			}
+		} else {
+			// delete the extra old children
+			while (oldIndex < oldEle.children.length) {
+				diffs.push(new ElementDiffItem(oldElePath + '[' + oldIndex + ']', 'delete', null));
+				oldIndex++;
+			}
+		}
+
+		return diffs;
+	}
+};
+
+/* *******************
+ * treeDiff
+ */
+var treeDiff = {
+	diff: function (oldRootEle, newRootEle) {
+		var diffs = treeDiffImpl.compareElement(oldRootEle.tagName, oldRootEle, newRootEle.tagName, newRootEle);
+		return diffs;
+	}
+};
+
+if (typeof module !== 'undefined') {
+	// node.js export (if we're using node.js)
+	module.exports = treeDiff;
+}
+
+},{"../json-to-markup/Element":8}]},{},[10]);
 
 if (typeof module !== 'undefined') {
 	// node.js export (if we're using node.js)
