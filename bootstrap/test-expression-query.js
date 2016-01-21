@@ -1,7 +1,7 @@
 /*
  * This script tests the expressionQuery module.
  */
-var expressionQuery = require('../src/json-to-json/expressionQuery.js');
+var j2j = require('../src/json-to-json/j2j.js');
 
 var obj = {
 	people: [
@@ -32,6 +32,6 @@ var obj = {
 //var expr = '$1desc';
 var expr = 'people[1].*.city';
 //var expr = 'people[2].?.city';
-var matches = expressionQuery.query(expr, obj);
+var matches = j2j.query(expr, obj);
 console.log('expr = ' + expr);
 console.log('matches = ' + JSON.stringify(matches, undefined, 2));
