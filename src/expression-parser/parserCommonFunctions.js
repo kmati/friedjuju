@@ -130,6 +130,44 @@ var parserCommonFunctions = {
 		} else {
 			return undefined;
 		}
+	},
+
+	// Executes a sequence of productions
+	// str: The string to process
+	// index: The index at which to start the test
+	// productionNameArray: An array of production names
+	// ctxt: The object that contains the production functions
+	// tokenToBeReturned: The name of the token by which the resulting token will be labeled
+	// Returns: The { newIndex: number, token: Token } result if there is a match OR undefined
+	seq: function (str, index, productionNameArray, ctxt, tokenToBeReturned) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(tokenToBeReturned, '', index);
+
+
+		for (var c = 0; c < productionNameArray.length; c++) {
+			var productionName = productionNameArray[c];
+			var ret = ctxt[productionName](str, index);
+			if (!ret) {
+				return undefined;
+			}
+
+			index = ret.newIndex;
+			token.addChild(ret.token);
+		}
+
+		if (token.children.length > 0) {
+			token.value = str.substring(originalIndex, index);
+			return {
+				newIndex: index,
+				token: token
+			};
+		}
+
+		return undefined;		
 	}
 };
 

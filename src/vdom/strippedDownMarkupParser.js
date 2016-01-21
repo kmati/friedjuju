@@ -366,37 +366,7 @@ var strippedDownMarkupParserImpl = {
 			return undefined;
 		}
 
-		var originalIndex = index;
-		var token = new Token(Token.AttributeDeclaration, '', index);
-
-		// AttributeName
-		var retAttributeName = this.AttributeName(str, index);
-		if (retAttributeName) {
-			index = retAttributeName.newIndex;
-			token.addChild(retAttributeName.token);
-
-			// Eq
-			var retEq = this.Eq(str, index);
-			if (retEq) {
-				index = retEq.newIndex;
-				token.addChild(retEq.token);
-
-				// AttributeValue
-				var retAttributeValue = this.AttributeValue(str, index);
-				if (retAttributeValue) {
-					index = retAttributeValue.newIndex;
-					token.addChild(retAttributeValue.token);
-
-					token.value = str.substring(originalIndex, index);
-					return {
-						newIndex: index,
-						token: token
-					};
-				}
-			}
-		}
-
-		return undefined;
+		return parserCommonFunctions.seq(str, index, ['AttributeName', 'Eq', 'AttributeValue'], this, 'AttributeDeclaration');
 	},
 
 	// AttributeName := Chars
@@ -464,37 +434,7 @@ var strippedDownMarkupParserImpl = {
 			return undefined;
 		}
 
-		var originalIndex = index;
-		var token = new Token(Token.AttributeValue, '', index);
-
-		// Quote
-		var retQuoteOpen = this.Quote(str, index);
-		if (retQuoteOpen) {
-			index = retQuoteOpen.newIndex;
-			token.addChild(retQuoteOpen.token);
-
-			// AttributeValueString
-			var retAttributeValueString = this.AttributeValueString(str, index);
-			if (retAttributeValueString) {
-				index = retAttributeValueString.newIndex;
-				token.addChild(retAttributeValueString.token);
-
-				// 	Quuote
-				var retQuoteClosed = this.Quote(str, index);
-				if (retQuoteClosed) {
-					index = retQuoteClosed.newIndex;
-					token.addChild(retQuoteClosed.token);
-
-					token.value = str.substring(originalIndex, index);
-					return {
-						newIndex: index,
-						token: token
-					};
-				}
-			}
-		}
-
-		return undefined;
+		return parserCommonFunctions.seq(str, index, ['Quote', 'AttributeValueString', 'Quote'], this, 'AttributeValue');
 	},
 
 	// AttributeValueString := SpaceyChars
