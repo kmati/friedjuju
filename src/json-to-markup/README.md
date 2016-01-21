@@ -39,7 +39,7 @@ Please note that if you want to use j2m from node.js rather than from the browse
 1. To require src/j2m.js
 2. To require bin/debug/j2m-{version}.js or bin/release/j2m-{version}.js
 
-# How to Use
+# How to use j2m
 
 This is an example of how to use the j2m library. Simply require it if you're using node.js (or use the ```<script>``` element above).
 
@@ -200,6 +200,12 @@ This is because 'Hello World!' is the value of the second <tr> element and 'Mess
 
 Details about the syntax of the dot expressions can be found in the [ideas/idea-expression-grammar.md](ideas/idea-expression-grammar.md "A Full(ish) Description of the Expression Grammar") document. Read the sections describing Usage 1.
 
+
+# j2m and the Virtual DOM
+
+The friedjuju project contains a module called [vdom](../vdom) that provides virtual DOM support. For a full discussion on the subject, read the [vdom/README.md document](../vdom). Simply put, the vdom allows you to update sections of the DOM more efficiently than direct DOM manipulation.
+
+## Appendix ##
 
 # Gotcha: No top-level attribute declarations
 
