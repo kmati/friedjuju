@@ -150,5 +150,12 @@ if (typeof document === 'undefined') {
 			return textNode;
 		}
 	};
+
+	// create the html, head and body elements in a hierarchy
+	document.html = document.createElement('html');
+	document.head = document.createElement('head');
+	document.body = document.createElement('body');
+	document.html.appendChild(document.head);
+	document.html.appendChild(document.body);
 }
 // #DONT_BUILD_END

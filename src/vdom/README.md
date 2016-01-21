@@ -11,10 +11,10 @@ There are other vdom implementations out there, such as:
 * [https://github.com/Matt-Esch/virtual-dom](https://github.com/Matt-Esch/virtual-dom)
 * The vdom used in ReactJS
 
-The reason why I decided to make one for [../json-to-markup](j2m) is that it was easier to bind a custom vdom to the [../json-to-markup/Element.js](Element) and [../json-to-markup/Attr.js](Attr) objects that are used in j2m.
+The reason why I decided to make one for [j2m](../json-to-markup) is that it was easier to bind a custom vdom to the [Element](../json-to-markup/Element.js) and [Attr](../json-to-markup/Attr.js) objects that are used in j2m.
 
 
-# How To Use j2m and the vdom within the Browser
+# How to use j2m and the vdom within the Browser
 
 Whereas you can in fact use the vdom off the browser (see the later section entitled: "How to Use j2m and the vdom In node.js") this section pertains to use within the browser.
 
@@ -31,12 +31,15 @@ Use the following JavaScript to invoke j2m and the vdom:
 ```
 // Create an object to represent an initial view
 var obj = {
-	"$1table.$0tr.th": ["Species", "Sizes"],
-	"$1table.$1tr.td": ["Dog", "small"],
-	"$1table.$2tr.td": ["Catty", "small"],
-	"$1table.$3tr.td": ["Gorilla", "large"],
-	"$1table.$4tr.td": ["Human", "large"],
-	"$1table.$2tr.$0td.@style": "color: red; background-color: #aad"
+	table: {
+		tr: [
+			{ th: ["Species", "Sizes"] },
+			{ td: ["Dog", "small"] },
+			{ td: ["Catty", "small"], "$0td.@style": "color: red; background-color: #aad" },
+			{ td: ["Gorilla", "large"] },
+			{ td: ["Human", "large"] }
+		]
+	}
 };
 
 j2m.prettyPrint = true;
@@ -59,11 +62,14 @@ console.log('Before | domElement = ' + domElement.innerHTML);
 
 // Make a new object to represent the new content to be placed in domElement
 var objNew = {
-	"$1table.$0tr.th": ["Species", "Sizes"],
-	"$1table.$1tr.td": ["Dog", "small to medium"],
-	"$1table.$2tr.td": ["Cat", "small"],
-	"$1table.$3tr.td": ["Gorilla", "large"],
-	"$1table.$2tr.$0td.@style": "color: green; background-color: #aad"
+	table: {
+		tr: [
+			{ th: ["Species", "Sizes"] },
+			{ td: ["Dog", "small to medium"] },
+			{ td: ["Cat", "small"], "$0td.@style": "color: green; background-color: #aad" },
+			{ td: ["Gorilla", "large"] }
+		]
+	}
 };
 
 // now make the call to use the vdom to set the objNew into domElement
@@ -71,10 +77,19 @@ j2m.updateDOM(objNew, domElement);
 console.log('After | domElement = ' + domElement.innerHTML);
 ```
 
-One thing to note are the 2 ways in which we called j2m:
+One thing to note are the 2 calls that we used with j2m:
 
-1. var result = j2m.execute(obj);
-2. j2m.updateDOM(objNew, domElement);
+*The first call*
+
+```
+var result = j2m.execute(obj);
+```
+
+* The second call*
+
+```
+j2m.updateDOM(objNew, domElement);
+```
 
 In the first call, ```j2m.execute``` returns a markup string. We used this later in the following line:
 
@@ -88,14 +103,14 @@ In the second call, ```j2m.updateDOM``` returns undefined. However, it sets the 
 Technically speaking, you can use the second call for all your needs if you do NOT need to get the markup as a string and are only interested in writing content into DOM elements.
 
 
-# How to Use j2m and the vdom In node.js
+# How to use j2m and the vdom in node.js
 
 The obvious difference between the browser and node.js environments is that node.js does NOT have a DOM. So using a DOM is kind of nonsensical. However, there may be situations where in a non-browser environment you will want to simulate the effects of the browser (at least somewhat).
 
 Enter the document-shim
 -----------------------
 
-The [./document-shim.js](document-shim) is used to emulate the ```document``` and ```ELEMENT``` APIs of the browser for use in a non-browser environment. It is deliberately a partial implementation of those APIs and does not seek to be complete. Its reason for existence is the vdom. The vdom uses browser semantics to manipulate DOM elements. The result is that the code you will write off the browser is almost identical to the code you will write on the browser.
+The [document-shim](document-shim.js) is used to emulate the ```document``` and ```ELEMENT``` APIs of the browser for use in a non-browser environment. It is deliberately a partial implementation of those APIs and does not seek to be complete. Its reason for existence is the vdom. The vdom uses browser semantics to manipulate DOM elements. The result is that the code you will write off the browser is almost identical to the code you will write on the browser.
 
 So what's the difference? The difference is that you need to use the document-shim, which is shown below:
 
@@ -113,12 +128,15 @@ var j2m = require('../src/json-to-markup/j2m.js');
 
 // Create an object to represent an initial view
 var obj = {
-	"$1table.$0tr.th": ["Species", "Sizes"],
-	"$1table.$1tr.td": ["Dog", "small"],
-	"$1table.$2tr.td": ["Catty", "small"],
-	"$1table.$3tr.td": ["Gorilla", "large"],
-	"$1table.$4tr.td": ["Human", "large"],
-	"$1table.$2tr.$0td.@style": "color: red; background-color: #aad"
+	table: {
+		tr: [
+			{ th: ["Species", "Sizes"] },
+			{ td: ["Dog", "small"] },
+			{ td: ["Catty", "small"], "$0td.@style": "color: red; background-color: #aad" },
+			{ td: ["Gorilla", "large"] },
+			{ td: ["Human", "large"] }
+		]
+	}
 };
 
 j2m.prettyPrint = true;
@@ -141,11 +159,14 @@ console.log('Before | domElement = ' + domElement.innerHTML);
 
 // Make a new object to represent the new content to be placed in domElement
 var objNew = {
-	"$1table.$0tr.th": ["Species", "Sizes"],
-	"$1table.$1tr.td": ["Dog", "small to medium"],
-	"$1table.$2tr.td": ["Cat", "small"],
-	"$1table.$3tr.td": ["Gorilla", "large"],
-	"$1table.$2tr.$0td.@style": "color: green; background-color: #aad"
+	table: {
+		tr: [
+			{ th: ["Species", "Sizes"] },
+			{ td: ["Dog", "small to medium"] },
+			{ td: ["Cat", "small"], "$0td.@style": "color: green; background-color: #aad" },
+			{ td: ["Gorilla", "large"] }
+		]
+	}
 };
 
 // now make the call to use the vdom to set the objNew into domElement
