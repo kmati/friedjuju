@@ -85,7 +85,7 @@ One thing to note are the 2 calls that we used with j2m:
 var result = j2m.execute(obj);
 ```
 
-* The second call*
+*The second call*
 
 ```
 j2m.updateDOM(objNew, domElement);
