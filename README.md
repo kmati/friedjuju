@@ -14,6 +14,29 @@ The other thing that dawned on me as I thought about all this is that I could us
 
 This project is experimental right now but I have a funny feeling it could lead somewhere...
 
+# Libraries that you get from friedjuju
+
+The friedjuju project has grown in scope to include the following libraries:
+
+* j2m (with vdom)
+* j2j
+* j2f
+
+## j2m
+
+[j2m](src/json-to-markup) allows you to transform JavaScript objects or JSON strings into markup (e.g. HTML, SVG, XML, etc). The idea is to encode your web views as JSON which is syntactically valid for JavaScript parsing rules. This is important as it does not break your using tools like [esprima](http://esprima.org/) to analyze your JavaScript files. Consider the corollary where JSX (used by ReactJS) does not conform to the JavaScript spec. In order to reduce the size of the JSON that maps to markup, dot expressions are used as property keys. This makes the resulting JSON smaller and in some cases more readable, while still remaining as valid JSON.
+
+j2m also contains a [virtual DOM implementation](src/vdom) that allows you to update DOM elements faster than direct DOM manipulation.
+
+## j2j
+
+[j2j](src/json-to-json) allows you to transform JavaScript objects or JSON from one structure to another using expressions that map between the structures. j2j also allows you to query objects using expressions.
+
+## j2f
+
+[j2f](src/json-to-function) allows you to bind functions to objects within an object graph. These functions will automatically be invoked when the object graph is traversed. In this way you can orchestrate work tasks in an object graph and have the tasks dispatched based on the structure of the graph.
+
+
 # Installation
 
 The usual, get or clone the repo and then:
