@@ -31,6 +31,18 @@ if (typeof document === 'undefined') {
 		domElement.appendChild(o);
 	}
 
+	// removes an element from an array at a specific index
+	// arr: The array
+	// index: The index for the element that you want to remove
+	function removeElementAt(arr, index) {
+		if (index >= 0 && index < arr.length) {
+		for (var c = index; c < arr.length - 1; c++) {
+			arr[c] = arr[c + 1];
+		}
+			arr.length--;
+		}
+	}
+
 	// Convention for the properties of the DOM element instance:
 	// 1) The properties prefixed by an underscore are NOT part of the ELEMENT API;
 	//    they are needed for the node.js implementation.
@@ -48,25 +60,20 @@ if (typeof document === 'undefined') {
 				childNodes: [],
 
 				// The attributes for the element
-				_attributes: {},
+				attributes: [],
 
 				// Sets an attribute of the element
 				setAttribute: function (attrName, attrVal) {
-					this._attributes[attrName] = attrVal;
+					this.attributes.push({ name: attrName, value: attrVal });
 				},
 
 				// Removes an attribute from the element
 				removeAttribute: function (attrName) {
-					delete this._attributes[attrName];
-				},
-
-				// Removes a child node (that is located at a specific index) from the element
-				_removeChildAt: function (index) {
-					if (index >= 0 && index < this.childNodes.length) {
-						for (var c = index; c < this.childNodes.length - 1; c++) {
-							this.childNodes[c] = this.childNodes[c + 1];
+					for (var c = this.attributes.length - 1; c >= 0; c--) {
+						var attr = this.attributes[c];
+						if (attr.name === attrName) {
+							removeElementAt(this.attributes, c);
 						}
-						this.childNodes.length--;
 					}
 				},
 
@@ -75,7 +82,7 @@ if (typeof document === 'undefined') {
 					for (var c = this.childNodes.length - 1; c >= 0; c--) {
 						var chInst = this.childNodes[c];
 						if (chInst === child) {
-							this._removeChildAt(c);
+							removeElementAt(this.childNodes, c);
 						}
 					}
 				},
@@ -88,9 +95,10 @@ if (typeof document === 'undefined') {
 				// The toString implementation: Equivalent to outerHTML.
 				toString: function () {
 					var str = '<' + this.tagName;
-					for (var attrName in this._attributes) {
-						str += ' ' + attrName + '="' + this._attributes[attrName] + '"';
-					}
+					this.attributes.forEach(function (attr) {
+						str += ' ' + attr.name + '="' + attr.value + '"';
+					});
+					
 					str += '>';
 
 					this.childNodes.forEach(function (child) {

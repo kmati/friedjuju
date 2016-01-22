@@ -13,7 +13,8 @@
  */
 
 var j2mTransformer = require('./j2mTransformer.js'),
-	markupPrinter = require('./markupPrinter.js');
+	markupPrinter = require('./markupPrinter.js'),
+	domElementConverter = require('../vdom/domElementConverter.js');
 
 // We need window for the browser-side so that j2m is declared globally on the browser;
 // however, since node.js has no window object, we merely create one here so that the
@@ -26,6 +27,8 @@ if (typeof window === 'undefined') {
  * j2m
  */
 var j2m = window.j2m = {
+	domElementConverter: domElementConverter,
+
 	// true = pretty print (indentation and newlines); false = print in terse format (no indentation or new lines)
 	prettyPrint: true,
 

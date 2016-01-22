@@ -1445,7 +1445,8 @@ String.prototype.repeat = function (count) {
  */
 
 var j2mTransformer = require('./j2mTransformer.js'),
-	markupPrinter = require('./markupPrinter.js');
+	markupPrinter = require('./markupPrinter.js'),
+	domElementConverter = require('../vdom/domElementConverter.js');
 
 // We need window for the browser-side so that j2m is declared globally on the browser;
 // however, since node.js has no window object, we merely create one here so that the
@@ -1458,6 +1459,8 @@ if (typeof window === 'undefined') {
  * j2m
  */
 var j2m = window.j2m = {
+	domElementConverter: domElementConverter,
+
 	// true = pretty print (indentation and newlines); false = print in terse format (no indentation or new lines)
 	prettyPrint: true,
 
@@ -1511,11 +1514,12 @@ if (typeof module !== 'undefined') {
 	module.exports = j2m;
 }
 
-},{"../vdom":16,"./j2mTransformer.js":11,"./markupPrinter.js":12}],11:[function(require,module,exports){
+},{"../vdom":17,"../vdom/domElementConverter.js":15,"./j2mTransformer.js":11,"./markupPrinter.js":12}],11:[function(require,module,exports){
 require('./String-Extensions.js');
 var Attr = require('./Attr.js'),
 	Element = require('./Element.js'),
 	objectGraphCreator = require('./objectGraphCreator'),
+	domElementConverter = require('../vdom/domElementConverter.js'),
 	strippedDownMarkupParser = require('../vdom/strippedDownMarkupParser.js');
 
 
@@ -1561,7 +1565,13 @@ var j2mTransformer = {
 	// Returns: The Element instance
 	envelopeDOMElement: function (domElement) {
 		var rootEle = new Element('__ROOT__');
-		rootEle.addChild(strippedDownMarkupParser.parse(domElement.innerHTML));
+		if (domElement.innerHTML) {
+			var theEle = strippedDownMarkupParser.parse('<nop>' + domElementConverter.convertDOMElementChildrenToXml(domElement) + '</nop>');
+
+			theEle.children.forEach(function (child) {
+				rootEle.addChild(child);
+			});
+		}
 		return rootEle;
 	},
 
@@ -1686,7 +1696,7 @@ if (typeof module !== 'undefined') {
 	module.exports = j2mTransformer;
 }
 
-},{"../vdom/strippedDownMarkupParser.js":17,"./Attr.js":7,"./Element.js":8,"./String-Extensions.js":9,"./objectGraphCreator":13}],12:[function(require,module,exports){
+},{"../vdom/domElementConverter.js":15,"../vdom/strippedDownMarkupParser.js":18,"./Attr.js":7,"./Element.js":8,"./String-Extensions.js":9,"./objectGraphCreator":13}],12:[function(require,module,exports){
 /* *******************
  * markupPrinter
  */
@@ -1841,7 +1851,98 @@ if (typeof module !== 'undefined') {
 // 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./strippedDownMarkupParser.js":17}],15:[function(require,module,exports){
+},{"./strippedDownMarkupParser.js":18}],15:[function(require,module,exports){
+/*
+ * This module converts a DOM element into Xml or JSON strings.
+ */
+var domElementConverter = {
+	convertDOMElementToXml: function (domElement) {
+		var str = '<' + domElement.tagName;
+
+		for (var c = 0; c < domElement.attributes.length; c++) {
+			var attr = domElement.attributes[c];
+			str += ' ' + attr.name + '="' + attr.value + '"';
+		}
+
+		str += '>';
+
+		for (var c = 0; c < domElement.childNodes.length; c++) {
+			var domChild = domElement.childNodes[c];
+			if (domChild.nodeType === 1) {
+				var childEleStr = this.convertDOMElementToXml(domChild);
+				str += childEleStr;
+			} else if (domChild.nodeType === 3) {
+				str += domChild.textContent;
+			}
+		}
+
+		str += '</' + domElement.tagName + '>';
+
+		return str;
+	},
+
+	convertDOMElementChildrenToXml: function (domElement) {
+		var str = '';
+
+		for (var c = 0; c < domElement.childNodes.length; c++) {
+			var domChild = domElement.childNodes[c];
+			str += this.convertDOMElementToXml(domChild);
+		}
+
+		return str;
+	},
+
+	// ---
+
+	convertDOMElementToJSON: function (domElement) {
+		var obj = {}, objEle;
+		objEle = obj[domElement.tagName] = {};
+
+		for (var c = 0; c < domElement.attributes.length; c++) {
+			var attr = domElement.attributes[c];
+			objEle['@' + attr.name] = attr.value;
+		}
+
+		for (var c = 0; c < domElement.childNodes.length; c++) {
+			var domChild = domElement.childNodes[c];
+			if (domChild.nodeType === 1) {
+				var childEleObj = this.convertDOMElementToJSON(domChild)[domChild.tagName];
+				var oProp = objEle[domChild.tagName];
+				if (oProp) {
+					if (!(oProp instanceof Array)) {
+						objEle[domChild.tagName] = [oProp];
+					}
+					objEle[domChild.tagName].push(childEleObj);
+				} else {
+					objEle[domChild.tagName] = childEleObj;
+				}
+			} else if (domChild.nodeType === 3) {
+				objEle.$str = domChild.textContent;
+			}
+		}
+
+		return obj;
+	},
+
+	convertDOMElementChildrenToJSON: function (domElement) {
+		var arr = [];
+
+		for (var c = 0; c < domElement.childNodes.length; c++) {
+			var domChild = domElement.childNodes[c];
+			var childEleObj = this.convertDOMElementToJSON(domChild);
+			arr.push(childEleObj);
+		}
+
+		return arr;
+	}
+};
+
+if (typeof module !== 'undefined') {
+	// node.js export (if we're using node.js)
+	module.exports = domElementConverter;
+}
+
+},{}],16:[function(require,module,exports){
 /*
  * This module is used to write diffs to a DOM element
  */
@@ -2000,7 +2101,7 @@ if (typeof module !== 'undefined') {
 	module.exports = domWriter;
 }
 
-},{"./document-shim.js":14}],16:[function(require,module,exports){
+},{"./document-shim.js":14}],17:[function(require,module,exports){
 /*
  * This is the virtual DOM module
  */
@@ -2026,7 +2127,7 @@ if (typeof module !== 'undefined') {
 	module.exports = vdom;
 }
 
-},{"../json-to-markup/j2mTransformer.js":11,"./domWriter.js":15,"./treeDiff.js":18}],17:[function(require,module,exports){
+},{"../json-to-markup/j2mTransformer.js":11,"./domWriter.js":16,"./treeDiff.js":19}],18:[function(require,module,exports){
 /*
  * Simple stripped-down markup parser
  */
@@ -2125,26 +2226,26 @@ var strippedDownMarkupParserImpl = {
 			if (retChildren) {
 				index = retChildren.newIndex;
 				token.addChild(retChildren.token);
+			}
 
-				// CloseTag
-				var retCloseTag = this.CloseTag(str, index);
-				if (retCloseTag) {
-					index = retCloseTag.newIndex;
-					token.addChild(retCloseTag.token);
+			// CloseTag
+			var retCloseTag = this.CloseTag(str, index);
+			if (retCloseTag) {
+				index = retCloseTag.newIndex;
+				token.addChild(retCloseTag.token);
 
-					// Whitespaces?
-					retWhitespaces = this.Whitespaces(str, index);
-					if (retWhitespaces) {
-						index = retWhitespaces.newIndex;
-						token.addChild(retWhitespaces.token);
-					}
-
-					token.value = str.substring(originalIndex, index);
-					return {
-						newIndex: index,
-						token: token
-					};
+				// Whitespaces?
+				retWhitespaces = this.Whitespaces(str, index);
+				if (retWhitespaces) {
+					index = retWhitespaces.newIndex;
+					token.addChild(retWhitespaces.token);
 				}
+
+				token.value = str.substring(originalIndex, index);
+				return {
+					newIndex: index,
+					token: token
+				};
 			}
 		}
 
@@ -2741,7 +2842,7 @@ if (typeof module !== 'undefined') {
 	module.exports = strippedDownMarkupParser;
 }
 
-},{"../expression-parser/Token.js":1,"../expression-parser/astEmitter.js":2,"../expression-parser/parserCommonFunctions.js":4,"../json-to-markup/Attr.js":7,"../json-to-markup/Element.js":8}],18:[function(require,module,exports){
+},{"../expression-parser/Token.js":1,"../expression-parser/astEmitter.js":2,"../expression-parser/parserCommonFunctions.js":4,"../json-to-markup/Attr.js":7,"../json-to-markup/Element.js":8}],19:[function(require,module,exports){
 /*
  * This module performs a tree diff of Element (and Attr) objects in 2 trees.
  * This is a work in progress on the way to implementing virtual dom functionality.
@@ -2823,7 +2924,7 @@ var treeDiffImpl = {
 	getAttributeByName: function (ele, attrName) {
 		for (var c = 0; c < ele.attributes.length; c++) {
 			var attr = ele.attributes[c];
-			if (attr.name === attrName) {
+			if (attr.name.toLowerCase() === attrName.toLowerCase()) {
 				return attr;
 			}
 		}
@@ -2844,7 +2945,7 @@ var treeDiffImpl = {
 		var diffs = [];
 
 		// compare tagName
-		if (oldEle.tagName !== newEle.tagName) {
+		if (oldEle.tagName.toLowerCase() !== newEle.tagName.toLowerCase()) {
 			// tagName changed
 			var diffItem = new ElementTagNameDiffItem(oldElePath, 'set', newEle.tagName);
 			diffs.push(diffItem);
@@ -2862,8 +2963,8 @@ var treeDiffImpl = {
 				// attr edited
 				var diffItem = new AttrDiffItem(oldElePath + '.@' + oldAttr.name, 'set', newAttr.value);
 				diffs.push(diffItem);
-				handledAttrs.push(newAttr);
 			}
+			handledAttrs.push(newAttr);
 		});
 
 		newEle.attributes.forEach(function (newAttr) {
@@ -2893,7 +2994,7 @@ var treeDiffImpl = {
 				diffs.push(new ElementDiffItem(oldElePath + '.$str', 'delete', null));
 				diffs.push(new ElementDiffItem(oldElePath + '[' + oldIndex + ']', 'add', newChild));
 				areChildrenSame = false;
-			} else if (typeof oldChild instanceof Element && typeof newChild === 'string') {
+			} else if (oldChild instanceof Element && typeof newChild === 'string') {
 				// child is replaced by $str value
 				diffs.push(new ElementDiffItem(oldElePath + '[' + oldIndex + ']', 'delete', null));
 				diffs.push(new ElementDiffItem(oldElePath + '.$str', 'add', newChild));

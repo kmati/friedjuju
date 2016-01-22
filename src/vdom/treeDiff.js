@@ -79,7 +79,7 @@ var treeDiffImpl = {
 	getAttributeByName: function (ele, attrName) {
 		for (var c = 0; c < ele.attributes.length; c++) {
 			var attr = ele.attributes[c];
-			if (attr.name === attrName) {
+			if (attr.name.toLowerCase() === attrName.toLowerCase()) {
 				return attr;
 			}
 		}
@@ -100,7 +100,7 @@ var treeDiffImpl = {
 		var diffs = [];
 
 		// compare tagName
-		if (oldEle.tagName !== newEle.tagName) {
+		if (oldEle.tagName.toLowerCase() !== newEle.tagName.toLowerCase()) {
 			// tagName changed
 			var diffItem = new ElementTagNameDiffItem(oldElePath, 'set', newEle.tagName);
 			diffs.push(diffItem);
@@ -118,8 +118,8 @@ var treeDiffImpl = {
 				// attr edited
 				var diffItem = new AttrDiffItem(oldElePath + '.@' + oldAttr.name, 'set', newAttr.value);
 				diffs.push(diffItem);
-				handledAttrs.push(newAttr);
 			}
+			handledAttrs.push(newAttr);
 		});
 
 		newEle.attributes.forEach(function (newAttr) {
@@ -149,7 +149,7 @@ var treeDiffImpl = {
 				diffs.push(new ElementDiffItem(oldElePath + '.$str', 'delete', null));
 				diffs.push(new ElementDiffItem(oldElePath + '[' + oldIndex + ']', 'add', newChild));
 				areChildrenSame = false;
-			} else if (typeof oldChild instanceof Element && typeof newChild === 'string') {
+			} else if (oldChild instanceof Element && typeof newChild === 'string') {
 				// child is replaced by $str value
 				diffs.push(new ElementDiffItem(oldElePath + '[' + oldIndex + ']', 'delete', null));
 				diffs.push(new ElementDiffItem(oldElePath + '.$str', 'add', newChild));

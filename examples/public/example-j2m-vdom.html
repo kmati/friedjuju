@@ -1,0 +1,168 @@
+<html>
+	<head>
+		<title>Example - j2m with vdom</title>
+		<script type="text/javascript" src="j2m-0.0.1.js"></script>
+		<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css"/>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
+		<link rel="stylesheet" href="examples.css"/>
+		<style type="text/css">
+		p{
+			width: 400px;
+		}
+		</style>
+	</head>
+	<body>
+
+	<a href="/">Examples Main</a><br/>
+
+	<table>
+		<tr>
+			<td valign="top" style="padding-right: 30px">
+				<h2>Example - j2m with vdom #1</h2>
+
+				<p>
+					In this example you can type anything into the text field at the top. Then click the Add button.
+					Once you do that, a text field will be created in the "List of items". The created text field will contain the same text that you typed into the text field at the top.
+				</p>
+				<p>
+					If you type in some text into the text fields in the "List of items", the text will remain the way you edited it after clicking the Add button.
+				</p>
+
+				<label for="txtItem">Type something here:</label> <input type="text" id="txtItem" />
+				<button id="btnAdd">Add</button>
+				<br/>
+				List of items:<br/>
+				<ul id="listItems"></ul>
+			</td>
+
+
+			<td valign="top">
+				<h2>Example - j2m with vdom #2</h2>
+
+				<p>
+					In this example you can type anything into the text field at the top. Then click the Add button.
+					Whatever you typed will be added to the "List of items".
+				</p>
+
+				<label for="txtItemSimple">Type something here:</label> <input type="text" id="txtItemSimple" /> <span>Don't type in a number!</span>
+				<button id="btnAddSimple">Add</button>
+				<br/>
+				List of items:<br/>
+				<ul id="listItemsSimple"></ul>
+			</td>
+		</tr>
+	</table>
+
+	<script type="text/javascript">
+		var generator = {
+			// The main init
+			init: function () {
+				this.initForListOfTextFields();
+				this.initForListOfText();
+			},
+
+			// Inits the view for the list of text fields (i.e. #1)
+			initForListOfTextFields: function () {
+				this.listItems = document.getElementById('listItems');
+				this.txtItem = document.getElementById('txtItem');
+				this.btnAdd = document.getElementById('btnAdd');
+
+				this.txtItem.onkeydown = function (e) {
+					if (e.keyCode === 13) {
+						generator.btnAdd.click();
+					}
+				}
+
+				this.btnAdd.onclick = function () {
+					generator.clickedAdd();
+					generator.txtItem.value = '';
+				}
+			},
+
+			// Inits the view for the list of text content (i.e. #2)
+			initForListOfText: function () {
+				this.listItemsSimple = document.getElementById('listItemsSimple');
+				this.txtItemSimple = document.getElementById('txtItemSimple');
+				this.btnAddSimple = document.getElementById('btnAddSimple');
+
+				this.txtItemSimple.onkeydown = function (e) {
+					if (e.keyCode === 13) {
+						generator.btnAddSimple.click();
+					}
+				}
+
+				this.btnAddSimple.onclick = function () {
+					generator.clickedAddSimple();
+					generator.txtItemSimple.value = '';
+				}
+			},
+
+			// handler that is invoked when the Add button is clicked
+			clickedAdd: function () {
+				try {
+					if (this.txtItem.value.trim().length < 1) {
+						alert('Add some content to the text field');
+						return;
+					}
+					// get the object that represents the listItems' contents
+					var itemObj = j2m.domElementConverter.convertDOMElementToJSON(this.listItems).UL;
+
+					// add the new INPUT element with the text typed in it
+					if (!itemObj.LI) {
+						itemObj.LI = [];
+					} else if (!(itemObj.LI instanceof Array)) {
+						itemObj.LI = [itemObj.LI];
+					}
+
+					itemObj.LI.push({
+						input: { '@type': 'text', '@value': this.txtItem.value }
+					});
+
+					// now update the DOM
+					// Note: None of the existing fields in the list item other than the last one will be modified!
+					j2m.updateDOM(itemObj, this.listItems);
+				} catch (e) {
+					alert(e);
+				}
+			},
+
+			// handler that is invoked when the Add button for the new version is clicked
+			clickedAddSimple: function () {
+				try {
+					if (this.txtItemSimple.value.trim().length < 1) {
+						alert('Add some content to the text field');
+						return;
+					}
+					if (!isNaN(this.txtItemSimple.value)) {
+						this.txtItemSimple.select();
+						this.txtItemSimple.focus();
+						alert('Yo, please don\'t type in numbers here!');
+						return;
+					}
+
+					// get the object that represents the listItemsSimple's contents
+					var itemObj = j2m.domElementConverter.convertDOMElementToJSON(this.listItemsSimple).UL;
+
+					// add the new INPUT element with the text typed in it
+					if (!itemObj.LI) {
+						itemObj.LI = [];
+					} else if (!(itemObj.LI instanceof Array)) {
+						itemObj.LI = [itemObj.LI];
+					}
+
+					itemObj.LI.push(this.txtItemSimple.value);
+
+					// now update the DOM
+					// Note: None of the existing fields in the list item other than the last one will be modified!
+					j2m.updateDOM(itemObj, this.listItemsSimple);
+				} catch (e) {
+					alert(e);
+				}
+			}
+		};
+
+		generator.init();
+	</script>
+
+	</body>
+</html>

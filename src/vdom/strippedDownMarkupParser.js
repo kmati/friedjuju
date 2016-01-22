@@ -96,26 +96,26 @@ var strippedDownMarkupParserImpl = {
 			if (retChildren) {
 				index = retChildren.newIndex;
 				token.addChild(retChildren.token);
+			}
 
-				// CloseTag
-				var retCloseTag = this.CloseTag(str, index);
-				if (retCloseTag) {
-					index = retCloseTag.newIndex;
-					token.addChild(retCloseTag.token);
+			// CloseTag
+			var retCloseTag = this.CloseTag(str, index);
+			if (retCloseTag) {
+				index = retCloseTag.newIndex;
+				token.addChild(retCloseTag.token);
 
-					// Whitespaces?
-					retWhitespaces = this.Whitespaces(str, index);
-					if (retWhitespaces) {
-						index = retWhitespaces.newIndex;
-						token.addChild(retWhitespaces.token);
-					}
-
-					token.value = str.substring(originalIndex, index);
-					return {
-						newIndex: index,
-						token: token
-					};
+				// Whitespaces?
+				retWhitespaces = this.Whitespaces(str, index);
+				if (retWhitespaces) {
+					index = retWhitespaces.newIndex;
+					token.addChild(retWhitespaces.token);
 				}
+
+				token.value = str.substring(originalIndex, index);
+				return {
+					newIndex: index,
+					token: token
+				};
 			}
 		}
 

@@ -28,13 +28,43 @@ var j2m = require('../src/json-to-markup/j2m.js');
 // 	'table.$0tr.$0td.@style': 'color: red'
 // };
 
+// var obj = {
+// 	"$1table.$0tr.th": ["Species", "Sizes"],
+// 	"$1table.$1tr.td": ["Dog", "small"],
+// 	"$1table.$2tr.td": ["Catty", "small"],
+// 	"$1table.$3tr.td": ["Gorilla", "large"],
+// 	"$1table.$4tr.td": ["Human", "large"],
+// 	"$1table.$2tr.$0td.@style": "color: red; background-color: #aad"
+// };
+
 var obj = {
-	"$1table.$0tr.th": ["Species", "Sizes"],
-	"$1table.$1tr.td": ["Dog", "small"],
-	"$1table.$2tr.td": ["Catty", "small"],
-	"$1table.$3tr.td": ["Gorilla", "large"],
-	"$1table.$4tr.td": ["Human", "large"],
-	"$1table.$2tr.$0td.@style": "color: red; background-color: #aad"
+	foo: {
+	  "@id": "listItemsSimple",
+	  "LI": [
+	    {
+	      "$str": "a"
+	    },
+	    {
+	      "$str": "s"
+	    },
+	    {
+	      "$str": "s"
+	    },
+	    {
+	      "$str": "x"
+	    },
+	    {
+	      "$str": "y"
+	    },
+	    {
+	      "$str": "z"
+	    },
+	    {},
+	    {},
+	    {},
+	    "junk"
+	  ]
+	}
 };
 
 j2m.prettyPrint = true;

@@ -2,6 +2,7 @@ require('./String-Extensions.js');
 var Attr = require('./Attr.js'),
 	Element = require('./Element.js'),
 	objectGraphCreator = require('./objectGraphCreator'),
+	domElementConverter = require('../vdom/domElementConverter.js'),
 	strippedDownMarkupParser = require('../vdom/strippedDownMarkupParser.js');
 
 
@@ -47,7 +48,13 @@ var j2mTransformer = {
 	// Returns: The Element instance
 	envelopeDOMElement: function (domElement) {
 		var rootEle = new Element('__ROOT__');
-		rootEle.addChild(strippedDownMarkupParser.parse(domElement.innerHTML));
+		if (domElement.innerHTML) {
+			var theEle = strippedDownMarkupParser.parse('<nop>' + domElementConverter.convertDOMElementChildrenToXml(domElement) + '</nop>');
+
+			theEle.children.forEach(function (child) {
+				rootEle.addChild(child);
+			});
+		}
 		return rootEle;
 	},
 
