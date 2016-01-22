@@ -212,7 +212,7 @@ You can see the ```Before | domElement``` content is the same as that of the res
 
 ## Simple Stripped-Down Markup Grammar
 
-The markup content from the DOM elements is first normalized by the [domElementConverter.js module](domElementConverter.js) module into a stripped-down XML format. This stripped down XML format contains only ```Element``` nodes which may contain child ```Element``` nodes or ```ElementTextValue``` objects (i.e. text content).
+The markup content from the DOM elements is first normalized by the [domElementConverter.js](domElementConverter.js) module into a stripped-down XML format. This stripped down XML format contains only ```Element``` nodes which may contain child ```Element``` nodes or ```ElementTextValue``` objects (i.e. text content).
 
 The grammar is shown here: 
 
