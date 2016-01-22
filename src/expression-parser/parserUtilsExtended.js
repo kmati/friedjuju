@@ -9,10 +9,6 @@ var Token = require('./Token.js'),
 var parserUtilsExtended = {
 	// ExpressionPiece := Wildcard | SingleObjectPlaceholder | NumberPrefixedElement | Attribute | Element | StringElement
 	ExpressionPiece: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
 		return parserCommonFunctions.or(str, index, 
 			['Wildcard', 'SingleObjectPlaceholder', 'NumberPrefixedElement', 'Attribute', 'Element', 'StringElement'],
 			this, 'ExpressionPiece');
@@ -411,28 +407,24 @@ var parserUtilsExtended = {
 		if (ret) {
 			return undefined;
 		}
-		ret = parserCommonFunctions.checkMatch(str, '=', index);
-		if (ret) {
-			return undefined;
-		}
-		ret = parserCommonFunctions.checkMatch(str, '@', index);
-		if (ret) {
-			return undefined;
-		}
-		ret = parserCommonFunctions.checkMatch(str, '[', index);
-		if (ret) {
-			return undefined;
-		}
-		ret = parserCommonFunctions.checkMatch(str, ']', index);
-		if (ret) {
-			return undefined;
-		}
 		ret = this.Wildcard(str, index);
 		if (ret) {
 			return undefined;
 		}
 		ret = this.SingleObjectPlaceholder(str, index);
 		if (ret) {
+			return undefined;
+		}
+
+		var succeeded = true;
+		['=', '@', '[', ']'].forEach(function (ch) {
+			ret = parserCommonFunctions.checkMatch(str, '=', index);
+			if (ret) {
+				succeeded = false;
+			}
+		});
+
+		if (!succeeded) {
 			return undefined;
 		}
 

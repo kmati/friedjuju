@@ -485,10 +485,6 @@ var Token = require('./Token.js'),
 var parserUtilsExtended = {
 	// ExpressionPiece := Wildcard | SingleObjectPlaceholder | NumberPrefixedElement | Attribute | Element | StringElement
 	ExpressionPiece: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
 		return parserCommonFunctions.or(str, index, 
 			['Wildcard', 'SingleObjectPlaceholder', 'NumberPrefixedElement', 'Attribute', 'Element', 'StringElement'],
 			this, 'ExpressionPiece');
@@ -887,28 +883,24 @@ var parserUtilsExtended = {
 		if (ret) {
 			return undefined;
 		}
-		ret = parserCommonFunctions.checkMatch(str, '=', index);
-		if (ret) {
-			return undefined;
-		}
-		ret = parserCommonFunctions.checkMatch(str, '@', index);
-		if (ret) {
-			return undefined;
-		}
-		ret = parserCommonFunctions.checkMatch(str, '[', index);
-		if (ret) {
-			return undefined;
-		}
-		ret = parserCommonFunctions.checkMatch(str, ']', index);
-		if (ret) {
-			return undefined;
-		}
 		ret = this.Wildcard(str, index);
 		if (ret) {
 			return undefined;
 		}
 		ret = this.SingleObjectPlaceholder(str, index);
 		if (ret) {
+			return undefined;
+		}
+
+		var succeeded = true;
+		['=', '@', '[', ']'].forEach(function (ch) {
+			ret = parserCommonFunctions.checkMatch(str, '=', index);
+			if (ret) {
+				succeeded = false;
+			}
+		});
+
+		if (!succeeded) {
 			return undefined;
 		}
 
@@ -1068,26 +1060,11 @@ var parserUtilsRestricted = {
 
 	// Dot := '.'
 	Dot: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var match = parserCommonFunctions.checkMatch(str, '.', index);
-		if (match) {
-			return {
-				newIndex: match.newIndex,
-				token: new Token(Token.Dot, str.substr(index, 1), index)
-			};
-		}
-		return undefined;
+		return parserCommonFunctions.exactlyText(str, index, '.', 'Dot');
 	},
 
 	// ExpressionPiece := NumberPrefixedElement | Attribute | Element | StringElement
 	ExpressionPiece: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
 		return parserCommonFunctions.or(str, index, 
 			['NumberPrefixedElement', 'Attribute', 'Element', 'StringElement'],
 			this, 'ExpressionPiece');
@@ -1121,20 +1098,7 @@ var parserUtilsRestricted = {
 
 	// Element := Usage1Char+
 	Element: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var originalIndex = index;
-		var retUsage1Chars = parserCommonFunctions.repeat1Plus(str, index, 'Usage1Char', this);
-		if (retUsage1Chars) {
-			return {
-				newIndex: retUsage1Chars.newIndex,
-				token: new Token(Token.Element, retUsage1Chars.token.value, originalIndex, [
-					retUsage1Chars.token
-				])
-			};
-		}
+		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'Usage1Char', this, 'Element');
 	},
 
 	// NumberPrefixedElement := ( '$' Digit+ Element )
@@ -1178,18 +1142,7 @@ var parserUtilsRestricted = {
 
 	// StringElement := '$str'
 	StringElement: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var match = parserCommonFunctions.checkMatch(str, '$str', index);
-		if (match) {
-			return {
-				newIndex: match.newIndex,
-				token: new Token(Token.StringElement, str.substr(index, 1), index)
-			};
-		}
-		return undefined;
+		return parserCommonFunctions.exactlyText(str, index, '$str', 'StringElement');
 	},
 
 	// Digit := ( '0' - '9' )
@@ -1228,20 +1181,16 @@ var parserUtilsRestricted = {
 		if (ret) {
 			return undefined;
 		}
-		ret = parserCommonFunctions.checkMatch(str, '=', index);
-		if (ret) {
-			return undefined;
-		}
-		ret = parserCommonFunctions.checkMatch(str, '@', index);
-		if (ret) {
-			return undefined;
-		}
-		ret = parserCommonFunctions.checkMatch(str, '[', index);
-		if (ret) {
-			return undefined;
-		}
-		ret = parserCommonFunctions.checkMatch(str, ']', index);
-		if (ret) {
+
+		var succeeded = true;
+		['=', '@', '[', ']'].forEach(function (ch) {
+			ret = parserCommonFunctions.checkMatch(str, '=', index);
+			if (ret) {
+				succeeded = false;
+			}
+		});
+
+		if (!succeeded) {
 			return undefined;
 		}
 
@@ -1253,34 +1202,12 @@ var parserUtilsRestricted = {
 
 	// Wildcard := '*'
 	Wildcard: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var match = parserCommonFunctions.checkMatch(str, '*', index);
-		if (match) {
-			return {
-				newIndex: match.newIndex,
-				token: new Token(Token.Wildcard, str.substr(index, 1), index)
-			};
-		}
-		return undefined;
+		return parserCommonFunctions.exactlyText(str, index, '*', 'Wildcard');
 	},
 
 	// SingleObjectPlaceholder := '?'
 	SingleObjectPlaceholder: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var match = parserCommonFunctions.checkMatch(str, '?', index);
-		if (match) {
-			return {
-				newIndex: match.newIndex,
-				token: new Token(Token.SingleObjectPlaceholder, str.substr(index, 1), index)
-			};
-		}
-		return undefined;
+		return parserCommonFunctions.exactlyText(str, index, '?', 'SingleObjectPlaceholder');
 	}
 };
 
