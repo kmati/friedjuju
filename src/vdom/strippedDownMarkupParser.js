@@ -1,30 +1,5 @@
 /*
- * Simple stripped-down markup parser
- */
-
-/* Simple Stripped-Down Markup Grammar:
-	Element := Whitespaces? OpenTagStart AttributeDeclarations? ( (OpenTagStop Children? CloseTag) | ShortCloseTag ) Whitespaces?
-	Children := ElementChildNode+
-	ElementChildNode := Element | ElementTextValue
-	ElementTextValue := SpaceyChars
-	OpenTagStart := '<' TagName
-	OpenTagStop := '>'
-	CloseTag := '</' TagName '>'
-	ShortCloseTag := '/>'
-	TagName := Chars
-	AttributeDeclarations := ( Whitespaces AttributeDeclaration )+
-	AttributeDeclaration := AttributeName Eq AttributeValue
-	AttributeName := Chars
-	Eq := '='
-	Quote := '"'
-	AttributeValue := Quote AttributeValueString Quote
-	AttributeValueString := SpaceyChars
-	Whitespaces := Whitespace+
-	Whitespace := ' ' | '\r' | '\n' | '\t'
-	Chars := Char+
-	Char := !Whitespace & SpaceyChar
-	SpaceyChars := SpaceyChar+
-	SpaceyChar := !Eq & !Quote & '\'' & !'[' & !']' & !'(' & !')' & !'<' & !'>' & !'/'
+ * Simple stripped-down markup parser which uses the "Simple stripped-down markup grammar"
  */
 var astEmitter = require('../expression-parser/astEmitter.js'),
 	Token = require('../expression-parser/Token.js'),

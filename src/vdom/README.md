@@ -208,3 +208,36 @@ After | domElement = <table><tr><th>Species</th><th>Sizes</th></tr><tr><td>Dog</
 
 You can see the ```Before | domElement``` content is the same as that of the result. You can also see that the ```After | domElement``` content is different. Of course, in the browser you would actually see the changes on screen!
 
+# Appendix
+
+## Simple Stripped-Down Markup Grammar
+
+The markup content from the DOM elements is first normalized by the [domElementConverter.js module](domElementConverter.js) module into a stripped-down XML format. This stripped down XML format contains only ```Element``` nodes which may contain child ```Element``` nodes or ```ElementTextValue``` objects (i.e. text content).
+
+The grammar is shown here: 
+
+```
+	Element := Whitespaces? OpenTagStart AttributeDeclarations? ( (OpenTagStop Children? CloseTag) | ShortCloseTag ) Whitespaces?
+	Children := ElementChildNode+
+	ElementChildNode := Element | ElementTextValue
+	ElementTextValue := SpaceyChars
+	OpenTagStart := '<' TagName
+	OpenTagStop := '>'
+	CloseTag := '</' TagName '>'
+	ShortCloseTag := '/>'
+	TagName := Chars
+	AttributeDeclarations := ( Whitespaces AttributeDeclaration )+
+	AttributeDeclaration := AttributeName Eq AttributeValue
+	AttributeName := Chars
+	Eq := '='
+	Quote := '"'
+	AttributeValue := Quote AttributeValueString Quote
+	AttributeValueString := SpaceyChars
+	Whitespaces := Whitespace+
+	Whitespace := ' ' | '\r' | '\n' | '\t'
+	Chars := Char+
+	Char := !Whitespace & SpaceyChar
+	SpaceyChars := SpaceyChar+
+	SpaceyChar := !Eq & !Quote & '\'' & !'[' & !']' & !'(' & !')' & !'<' & !'>' & !'/'
+```
+
