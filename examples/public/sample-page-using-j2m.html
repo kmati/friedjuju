@@ -5,11 +5,19 @@
 	<body>
 		
 		<script type="text/javascript">
-		var styles = {
-			'style.@type': 'text/css',
-			'style': 'body{ font-family: Arial; font-size: 12pt; color: #333; }\n' + 
-				'table{ background-color: #ccf; }\n' +
-				'.odd{ background-color: #aaf; }'
+		var headers = {
+			link: [
+				{ '@rel': 'stylesheet', '@href': 'http://yui.yahooapis.com/pure/0.6.0/pure-min.css' },
+				{ '@rel': 'stylesheet', '@href': 'https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css' },
+				{ '@rel': 'stylesheet', '@href': 'examples.css' },
+			],
+			title: 'Sample page using j2m',
+
+			style: {
+				'@type': 'text/css',
+				$str: 'table{ background-color: #ccf; }\n' +
+					'.odd{ background-color: #aaf; }'
+			}
 		};
 
 		/* 
@@ -18,7 +26,9 @@
 		*/
 		var pageDef = {
 			item1: {
-				'h1': 'Hello, I am alive!',
+				a: { '@href': "/", $str: 'Examples Main' },
+
+				'h1': 'Sample page using j2m',
 				'p': 'This is a simple page that will showcase some of the benefits of j2m.',
 				hr: null,
 				section: {
@@ -48,7 +58,7 @@
 
 		j2m.prettyPrint = false;
 
-		document.head.innerHTML += j2m.execute(styles);
+		document.head.innerHTML += j2m.execute(headers);
 		document.body.innerHTML = j2m.execute(pageDef);
 		</script>
 	</body>

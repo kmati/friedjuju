@@ -1,0 +1,17 @@
+#divContent{
+	width: 300px;
+}
+
+table tr td:first-of-type{
+	background-color: #eee;
+	border-right: solid 1px #777;
+}
+
+span{
+	padding-right: 10px;
+	font-style: normal;
+}
+
+.mini-label{
+	font-weight: bold;
+}
