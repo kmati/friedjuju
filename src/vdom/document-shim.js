@@ -53,6 +53,9 @@ if (typeof document === 'undefined') {
 		// Returns: The DOM element
 		createElement: function (tagName) {
 			var ele = {
+				// The node type property that signifies that this is an ELEMENT
+				nodeType: 1,
+
 				// The tagName of the element
 				tagName: tagName,
 
@@ -98,7 +101,7 @@ if (typeof document === 'undefined') {
 					this.attributes.forEach(function (attr) {
 						str += ' ' + attr.name + '="' + attr.value + '"';
 					});
-					
+
 					str += '>';
 
 					this.childNodes.forEach(function (child) {
@@ -147,6 +150,9 @@ if (typeof document === 'undefined') {
 		// Returns: The text node
 		createTextNode: function (strVal) {
 			var textNode = {
+				// The node type property that signifies that this is a text node
+				nodeType: 3,
+
 				// The text content
 				textContent: strVal,
 

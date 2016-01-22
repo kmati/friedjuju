@@ -230,6 +230,28 @@ var parserCommonFunctions = {
 		return undefined;
 	},
 
+	// Checks to make sure that literal text is matched against and returns a token
+	// str: The string to process
+	// index: The index at which to start the test
+	// text: The text to match against
+	// tokenToBeReturned: The name of the token by which the resulting token will be labeled
+	// Returns: The { newIndex: number, token: Token } result if there is a match OR undefined
+	exactlyText: function (str, index, text, tokenToBeReturned) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var ret = this.checkMatch(str, text, index);
+		if (!ret) {
+			return undefined;
+		}
+
+		return {
+			newIndex: index + text.length,
+			token: new Token(tokenToBeReturned, str.substr(index, text.length), index)
+		}
+	},
+
 	// Repeats a production in a ()* fashion, i.e. repeat 0 or more times
 	// str: The string to process
 	// index: The index at which to start the repetitiom
@@ -303,6 +325,41 @@ var parserCommonFunctions = {
 		}
 	},
 
+	// Repeats a production in a ()+ fashion, i.e. repeat 1 or more times.
+	// This must be used only when the production is of the form:
+	//	A := B+
+	//		i.e. where the only factor of A is B which can repeat 1 or more times.
+	//
+	// str: The string to process
+	// index: The index at which to start the repetitiom
+	// productionName: The name of the production (i.e. B in the example above)
+	// ctxt: The object that contains the production functions
+	// tokenToBeReturned: The name of the token by which the resulting token will be labeled (i.e. A in the example above)
+	// Returns: The { newIndex: number, token: Token } result if there is a match OR undefined
+	onlyRepeat1Plus: function (str, index, productionName, ctxt, tokenToBeReturned) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(tokenToBeReturned, '', index);
+		var ret = this.repeat1Plus(str, index, productionName, ctxt);
+		if (ret) {
+			index = ret.newIndex;
+			token.addChild(ret.token);
+		}
+
+		if (token.children.length > 0) {
+			token.value = str.substring(originalIndex, index);
+			return {
+				newIndex: index,
+				token: token
+			};
+		}
+
+		return undefined;
+	},
+
 	// Tests multiple productions to find the one that fits the substring at a specified index
 	// str: The string to process
 	// index: The index at which to start the test
@@ -311,6 +368,10 @@ var parserCommonFunctions = {
 	// tokenToBeReturned: The name of the token by which the resulting token will be labeled
 	// Returns: The { newIndex: number, token: Token } result if there is a match OR undefined
 	or: function (str, index, productionNameArray, ctxt, tokenToBeReturned) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
 		var originalIndex = index;
 		var tempToken = undefined, tempNewIndex = -1;
 		for (var c = 0; c < productionNameArray.length; c++) {
@@ -336,6 +397,36 @@ var parserCommonFunctions = {
 		} else {
 			return undefined;
 		}
+	},
+
+	// Executes a single production
+	// str: The string to process
+	// index: The index at which to start the test
+	// productionName: The name of the production
+	// ctxt: The object that contains the production functions
+	// tokenToBeReturned: The name of the token by which the resulting token will be labeled
+	// Returns: The { newIndex: number, token: Token } result if there is a match OR undefined
+	exactlyOne: function (str, index, productionName, ctxt, tokenToBeReturned) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(tokenToBeReturned, '', index);
+
+		var ret = ctxt[productionName](str, index);
+		if (ret) {
+			index = ret.newIndex;
+			token.addChild(ret.token);
+
+			token.value = str.substring(originalIndex, index);
+			return {
+				newIndex: index,
+				token: token
+			};
+		}
+
+		return undefined;
 	},
 
 	// Executes a sequence of productions
@@ -2254,34 +2345,11 @@ var strippedDownMarkupParserImpl = {
 
 	// 	Children := ElementChildNode+
 	Children: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var originalIndex = index;
-		var token = new Token(Token.Children, '', index);
-
-		var retElementChildNode = parserCommonFunctions.repeat1Plus(str, index, 'ElementChildNode', this);
-		if (retElementChildNode) {
-			index = retElementChildNode.newIndex;
-			token.addChild(retElementChildNode.token);
-
-			token.value = str.substring(originalIndex, index);
-			return {
-				newIndex: index,
-				token: token
-			};
-		}
-
-		return undefined;
+		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'ElementChildNode', this, 'Children');
 	},
 
 	// ElementChildNode := Element | ElementTextValue
 	ElementChildNode: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
 		return parserCommonFunctions.or(str, index, 
 			['Element', 'ElementTextValue'],
 			this, 'ElementChildNode');
@@ -2289,27 +2357,7 @@ var strippedDownMarkupParserImpl = {
 
 	// ElementTextValue := SpaceyChars
 	ElementTextValue: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var originalIndex = index;
-		var token = new Token(Token.ElementTextValue, '', index);
-
-		// SpaceyChars
-		var retSpaceyChars = this.SpaceyChars(str, index);
-		if (retSpaceyChars) {
-			index = retSpaceyChars.newIndex;
-			token.addChild(retSpaceyChars.token);
-
-			token.value = str.substring(originalIndex, index);
-			return {
-				newIndex: index,
-				token: token
-			};
-		}
-
-		return undefined;
+		return parserCommonFunctions.exactlyOne(str, index, 'SpaceyChars', this, 'ElementTextValue');
 	},
 
 	// OpenTagStart := '<' TagName
@@ -2346,19 +2394,7 @@ var strippedDownMarkupParserImpl = {
 
 	// OpenTagStop := '>'
 	OpenTagStop: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var ret = parserCommonFunctions.checkMatch(str, '>', index);
-		if (!ret) {
-			return undefined;
-		}
-
-		return {
-			newIndex: index + 1,
-			token: new Token(Token.OpenTagStop, str.substr(index, 1), index)
-		}
+		return parserCommonFunctions.exactlyText(str, index, '>', 'OpenTagStop');
 	},
 
 	// CloseTag := '</' TagName '>'
@@ -2402,44 +2438,12 @@ var strippedDownMarkupParserImpl = {
 
 	// ShortCloseTag := '/>'
 	ShortCloseTag: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var ret = parserCommonFunctions.checkMatch(str, '/>', index);
-		if (!ret) {
-			return undefined;
-		}
-
-		return {
-			newIndex: index + 2,
-			token: new Token(Token.ShortCloseTag, str.substr(index, 2), index)
-		}
+		return parserCommonFunctions.exactlyText(str, index, '/>', 'ShortCloseTag');
 	},
 
 	// TagName := Chars
 	TagName: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var originalIndex = index;
-		var token = new Token(Token.TagName, '', index);
-
-		// Chars
-		var retChars = this.Chars(str, index);
-		if (retChars) {
-			index = retChars.newIndex;
-			token.addChild(retChars.token);
-
-			token.value = str.substring(originalIndex, index);
-			return {
-				newIndex: index,
-				token: token
-			};
-		}
-
-		return undefined;
+		return parserCommonFunctions.exactlyOne(str, index, 'Chars', this, 'TagName');
 	},
 
 	// AttributeDeclarations := ( Whitespaces AttributeDeclaration )+
@@ -2501,121 +2505,34 @@ var strippedDownMarkupParserImpl = {
 
 	// AttributeName := Chars
 	AttributeName: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var originalIndex = index;
-		var token = new Token(Token.AttributeName, '', index);
-
-		// Chars
-		var retChars = this.Chars(str, index);
-		if (retChars) {
-			index = retChars.newIndex;
-			token.addChild(retChars.token);
-
-			token.value = str.substring(originalIndex, index);
-			return {
-				newIndex: index,
-				token: token
-			};
-		}
-
-		return undefined;
+		return parserCommonFunctions.exactlyOne(str, index, 'Chars', this, 'AttributeName');
 	},
 
 	// Eq := '='
 	Eq: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var ret = parserCommonFunctions.checkMatch(str, '=', index);
-		if (!ret) {
-			return undefined;
-		}
-
-		return {
-			newIndex: index + 1,
-			token: new Token(Token.Eq, str.substr(index, 1), index)
-		}
+		return parserCommonFunctions.exactlyText(str, index, '=', 'Eq');
 	},
 
 	// Quote := '"'
 	Quote: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var ret = parserCommonFunctions.checkMatch(str, '"', index);
-		if (!ret) {
-			return undefined;
-		}
-
-		return {
-			newIndex: index + 1,
-			token: new Token(Token.Quote, str.substr(index, 1), index)
-		}
+		return parserCommonFunctions.exactlyText(str, index, '"', 'Quote');
 	},
 
 	// AttributeValue := Quote AttributeValueString Quote
 	AttributeValue: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		return parserCommonFunctions.seq(str, index, ['Quote', 'AttributeValueString', 'Quote'], this, 'AttributeValue');
+		return parserCommonFunctions.seq(str, index,
+			['Quote', 'AttributeValueString', 'Quote'],
+			this, 'AttributeValue');
 	},
 
 	// AttributeValueString := SpaceyChars
 	AttributeValueString: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var originalIndex = index;
-		var token = new Token(Token.AttributeValueString, '', index);
-
-		// SpaceyChars
-		var retSpaceyChars = this.SpaceyChars(str, index);
-		if (retSpaceyChars) {
-			index = retSpaceyChars.newIndex;
-			token.addChild(retSpaceyChars.token);
-
-			token.value = str.substring(originalIndex, index);
-			return {
-				newIndex: index,
-				token: token
-			};
-		}
-
-		return undefined;
+		return parserCommonFunctions.exactlyOne(str, index, 'SpaceyChars', this, 'AttributeValueString');
 	},
 
 	// Whitespaces := Whitespace+
 	Whitespaces: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var originalIndex = index;
-		var token = new Token(Token.Whitespaces, '', index);
-		var retWhitespaces = parserCommonFunctions.repeat1Plus(str, index, 'Whitespace', this);
-		if (retWhitespaces) {
-			index = retWhitespaces.newIndex;
-			token.addChild(retWhitespaces.token);
-		}
-
-		if (token.children.length > 0) {
-			token.value = str.substring(originalIndex, index);
-			return {
-				newIndex: index,
-				token: token
-			};
-		}
-
-		return undefined;
-
+		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'Whitespace', this, 'Whitespaces');
 	},
 
 	// Whitespace := ' ' | '\r' | '\n' | '\t'
@@ -2644,27 +2561,7 @@ var strippedDownMarkupParserImpl = {
 
 	// Chars := Char+
 	Chars: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var originalIndex = index;
-		var token = new Token(Token.Chars, '', index);
-		var retChars = parserCommonFunctions.repeat1Plus(str, index, 'Char', this);
-		if (retChars) {
-			index = retChars.newIndex;
-			token.addChild(retChars.token);
-		}
-
-		if (token.children.length > 0) {
-			token.value = str.substring(originalIndex, index);
-			return {
-				newIndex: index,
-				token: token
-			};
-		}
-
-		return undefined;
+		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'Char', this, 'Chars');
 	},
 
 	// Char := !Whitespace & SpaceyChar
@@ -2690,27 +2587,7 @@ var strippedDownMarkupParserImpl = {
 
 	// SpaceyChars := SpaceyChar+
 	SpaceyChars: function (str, index) {
-		if (index >= str.length) {
-			return undefined;
-		}
-
-		var originalIndex = index;
-		var token = new Token(Token.SpaceyChars, '', index);
-		var retSpaceyChars = parserCommonFunctions.repeat1Plus(str, index, 'SpaceyChar', this);
-		if (retSpaceyChars) {
-			index = retSpaceyChars.newIndex;
-			token.addChild(retSpaceyChars.token);
-		}
-
-		if (token.children.length > 0) {
-			token.value = str.substring(originalIndex, index);
-			return {
-				newIndex: index,
-				token: token
-			};
-		}
-
-		return undefined;
+		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'SpaceyChar', this, 'SpaceyChars');
 	},
 
 	// SpaceyChar := !Eq & !Quote & '\'' & !'[' & !']' & !'(' & !')' & !'<' & !'>' & !'/'
@@ -2727,42 +2604,22 @@ var strippedDownMarkupParserImpl = {
 		if (ret) {
 			return undefined;
 		}
-		ret = parserCommonFunctions.checkMatch(str, '\'', index);
-		if (ret) {
-			return undefined;
-		}
-		ret = parserCommonFunctions.checkMatch(str, '[', index);
-		if (ret) {
-			return undefined;
-		}
-		ret = parserCommonFunctions.checkMatch(str, ']', index);
-		if (ret) {
-			return undefined;
-		}
-		ret = parserCommonFunctions.checkMatch(str, '(', index);
-		if (ret) {
-			return undefined;
-		}
-		ret = parserCommonFunctions.checkMatch(str, ')', index);
-		if (ret) {
-			return undefined;
-		}
-		ret = parserCommonFunctions.checkMatch(str, '<', index);
-		if (ret) {
-			return undefined;
-		}
-		ret = parserCommonFunctions.checkMatch(str, '>', index);
-		if (ret) {
-			return undefined;
-		}
-		ret = parserCommonFunctions.checkMatch(str, '/', index);
-		if (ret) {
-			return undefined;
-		}
 
-		return {
-			newIndex: index + 1,
-			token: new Token(Token.SpaceyChar, str.substr(index, 1), index)
+		var succeeded = true;
+		['\'', '[', ']', '(', ')', '<', '>', '/'].forEach(function (ch) {
+			var ret = parserCommonFunctions.checkMatch(str, ch, index);
+			if (ret) {
+				succeeded = false;
+				return;
+			}
+		});
+		if (succeeded) {
+			return {
+				newIndex: index + 1,
+				token: new Token(Token.SpaceyChar, str.substr(index, 1), index)
+			}
+		} else {
+			return undefined;
 		}
 	}
 };
