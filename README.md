@@ -1,5 +1,7 @@
 # friedjuju
 
+[![Join the chat at https://gitter.im/kmati/friedjuju](https://badges.gitter.im/kmati/friedjuju.svg)](https://gitter.im/kmati/friedjuju?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 The smell of fried juju...
 
 # What is all this about?
