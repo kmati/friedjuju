@@ -12,21 +12,13 @@ You can build the j2j library for use in the browser by:
 Changing the current working directory to the build directory:
 
 ```
-cd build
+cd path/to/friedjuju-root-directory
 ```
 
-From there, you should run the build-j2j.js script passing in the environment (debug or release).
-
-*Debug build:*
+From there, you should run the following command to build j2j and produce both debug and release products:
 
 ```
-node build-j2j.js -target debug
-```
-
-*Release build:*
-
-```
-node build-j2j.js -target release
+npm run-script build-j2j
 ```
 
 This will generate the j2j-{version}.js file in the bin/debug or bin/release directory (depending on the -target value). You can then use that in your web project.

@@ -72,6 +72,36 @@ I am in FnA and the object is: A
 I am in FnD and the object is: D
 ```
 
+# How to Build
+
+You can build the j2f library for use in the browser by:
+
+Changing the current working directory to the build directory:
+
+```
+cd path/to/friedjuju-root-directory
+```
+
+From there, you should run the following command to build j2f and produce both debug and release products:
+
+```
+npm run-script build-j2f
+```
+
+This will generate the j2f-{version}.js file in the bin/debug or bin/release directory (depending on the -target value). You can then use that in your web project.
+
+For example, to use j2f-0.0.1.js, you would do this:
+
+```
+<script type="text/javascript" src="path/to/j2f-0.0.1.js"></script>
+```
+
+Please note that if you want to use j2f from node.js rather than from the browser then you have 2 choices:
+
+1. To require src/j2f.js
+2. To require bin/debug/j2f-{version}.js or bin/release/j2f-{version}.js
+
+
 # Invocation
 
 The following is an example of how the traversal is effected in code:

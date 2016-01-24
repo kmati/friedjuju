@@ -1,9 +1,10 @@
 # Building friedjuju!
 
-There are 2 tools that need to be built:
+There are 3 tools that need to be built:
 
 * j2j
 * j2m
+* j2f
 
 # j2j
 
@@ -11,35 +12,55 @@ j2j is the tool that transforms JSON from one structure to another. Use this to 
 
 # j2m
 
-j2m is the tool that transforms JSON into markup of different kinds, e.g. HTML, SVG, etc.
+j2m is the tool that transforms JSON into markup of different kinds (e.g. HTML, SVG, etc) and allows you to query arbitrary object graphs.
 
-# How to Build j2j
+# j2f
 
-You can build the j2j library for use in the browser by:
+j2f is the tool that allows you to bind functions to objects in an object graph. When the graph is traversed then the bound functions will be invoked.
 
-Changing the current working directory to the build directory:
+# Simplest way to build Everything
 
-```
-cd build
-```
-
-From there, you should run the build-j2j.js script passing in the environment (debug or release).
-
-*Debug build:*
+You can build all 3 libraries as follows:
 
 ```
-node build-j2j.js -target debug
+cd path/to/friedjuju-root-directory
 ```
 
-*Release build:*
+From there, you should execute the following command:
 
 ```
-node build-j2j.js -target release
+npm run-script build-all
 ```
 
-This will generate the j2j-{version}.js file in the bin/debug or bin/release directory (depending on the -target value). You can then use that in your web project.
+This will build all 3 libraries in debug and release modes.
 
-For example, to use j2j-0.0.1.js, you would do this:
+To build each of the libraries individually, you can do:
+
+To build j2m:
+
+```
+npm run-script build-j2m
+```
+
+To build j2j:
+
+```
+npm run-script build-j2j
+```
+
+To build j2f:
+
+```
+npm run-script build-j2f
+```
+
+You can find the build products in the ```bin/debug``` and ```bin/release``` directories.
+
+# Do you really need to build?
+
+If you want to use the libraries in the web browser environment then you should use the builds. This ensures that the files are bundled into a single .js file which is minified and compressed.
+
+To use j2j-0.0.1.js on the browser, you would do this:
 
 ```
 <script type="text/javascript" src="path/to/j2j-0.0.1.js"></script>
@@ -50,57 +71,4 @@ Please note that if you want to use j2j from node.js rather than from the browse
 1. To require src/j2j.js
 2. To require bin/debug/j2j-{version}.js or bin/release/j2j-{version}.js
 
-
-# How to Build j2m
-
-You can build the j2m library for use in the browser by:
-
-Changing the current working directory to the build directory:
-
-```
-cd build
-```
-
-From there, you should run the build-j2m.js script passing in the environment (debug or release).
-
-*Debug build:*
-
-```
-node build-j2m.js -target debug
-```
-
-*Release build:*
-
-```
-node build-j2m.js -target release
-```
-
-This will generate the j2m-{version}.js file in the bin/debug or bin/release directory (depending on the -target value). You can then use that in your web project.
-
-For example, to use j2m-0.0.1.js, you would do this:
-
-```
-<script type="text/javascript" src="path/to/j2m-0.0.1.js"></script>
-```
-
-Please note that if you want to use j2m from node.js rather than from the browser then you have 2 choices:
-
-1. To require src/j2m.js
-2. To require bin/debug/j2m-{version}.js or bin/release/j2m-{version}.js
-
-
-# Building Everything
-
-Okay, instead of building the pieces one by one, you can do this:
-
-```
-cd build
-```
-
-Then
-
-```
-node build-all.js -target all
-```
-
-This will invoke the ```build-j2m.js``` and ```build.j2j.js``` scripts and pass on the ```-target all``` command line argument to both of the scripts.
+The same applies to j2m and j2f.

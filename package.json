@@ -16,5 +16,11 @@
   },
   "engines": {
     "node": ">=0.8.0"
+  },
+  "scripts": {
+    "build-all": "node build/build-all.js -target all",
+    "build-j2m": "node build/build-j2m.js -target all",
+    "build-j2j": "node build/build-j2j.js -target all",
+    "build-j2f": "node build/build-j2f.js -target all"
   }
 }
