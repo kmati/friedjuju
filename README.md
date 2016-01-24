@@ -1,5 +1,7 @@
 # friedjuju
 
+[![Build Status](https://travis-ci.org/kmati/friedjuju.svg?branch=master)](https://travis-ci.org/kmati/friedjuju)
+
 The smell of fried juju...
 
 # What is all this about?
