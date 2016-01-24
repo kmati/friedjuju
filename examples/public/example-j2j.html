@@ -20,6 +20,7 @@
 	"firstName": "Joe",
 	"lastName": "Chen",
 	"age": 34,
+	"numbers": [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
 	"address": {
 		"street": "10 Anywhere Road",
 		"city": "Rivendell",
@@ -41,7 +42,9 @@
 [
 	{ "from": "firstName", "to": "fname" },
 	{ "from": "address.street", "to": "st." },
-	{ "from": "address.city", "to": "city" }
+	{ "from": "address.city", "to": "city" },
+	{ "from": "numbers[3]", "to": "fourth_number" },
+	{ "from": "numbers[0]", "to": "first_number" }
 ]
 				</textarea>
 			</td>

@@ -11,10 +11,11 @@ var objectGraphCreatorImpl = {
 	// value: The value to set for the object
 	// Returns: The keys of the objects which are created based on the expression (which taken together, evaluate to the original expression), else undefined
 	create: function (expr, obj, value) {
-		var tokenRootExpr = ep.parseRestricted(expr);
+		var tokenRootExpr = ep.parseExtended(expr);
 
 		var context = undefined;
 		var key = undefined, lastContext = undefined;
+		var keyIndex = undefined;
 		var arrKeys = [];
 		astEmitter.subscribe(['ExpressionPiece'], function (token) {
 			if (!context) {
@@ -22,16 +23,62 @@ var objectGraphCreatorImpl = {
 			}
 			var firstChild = token.children[0];
 
+			if (firstChild.id === 'NumberPrefixedElement') {
+				key = firstChild.value;
+			} else if (firstChild.id === 'Attribute') {
+				key = firstChild.value;
+			} else if (firstChild.id === 'Element') {
+				if (firstChild.children.length > 1) {
+					// has ElementTail
+					key = firstChild.children[0].value;
+					var elementTail = firstChild.children[1];
+					var ai = elementTail.children[0]
+					if (ai.id === 'ArrayIndex') {
+						keyIndex = Number(ai.children[1].value);
+					} else {
+						throw new Error('You can only index arrays (ArrayIndex) and cannot use bounded element or attribute expressions for object graph creation | ai.id = ' + ai.id);
+					}
+				} else {
+					// no ElementTail
+					key = firstChild.value;
+					keyIndex = undefined;
+				}
+			} else if (firstChild.id === 'StringElement') {
+				context.$str = value;
+				return;
+			} else {
+				throw new Error('Invalid ExpressionPiece for object graph creation | token.id = ' + token.id);
+			}
+
 			var childObj = {};
-			key = firstChild.value;
 			arrKeys.push(key);
 
 			if (!context[key]) {
 				// create the object since it does not exist
-				context[key] = childObj;
+				if (typeof keyIndex !== 'undefined') {
+					// indexed element
+					context[key] = [];
+					context[key][keyIndex] = childObj;
+				} else {
+					// no index
+					context[key] = childObj;
+				}
 			} else {
 				// get the object since it exists 
-				childObj = context[key];
+				if (typeof keyIndex !== 'undefined') {
+					// indexed element
+					var theObj = context[key];
+					if (!(theObj instanceof Array)) {
+						theObj = [theObj];
+					}
+					childObj = theObj[keyIndex];
+					if (!childObj) {
+						childObj = theObj[keyIndex] = {};
+					}
+				} else {
+					// no index
+					childObj = context[key];
+				}
 			}
 
 			// remember this context as the last one
@@ -44,7 +91,11 @@ var objectGraphCreatorImpl = {
 
 		// if we have a last context and a key then set the value!
 		if (lastContext && key) {
-			lastContext[key] = value;
+			if (typeof keyIndex === 'undefined') {
+				lastContext[key] = value;
+			} else {
+				lastContext[key][keyIndex] = value;
+			}
 			return arrKeys;
 		}
 
@@ -96,7 +147,7 @@ var objectGraphCreator = {
 			if (!pair) {
 				// no matching pair found so copy over the property as is
 				newObj[key] = obj[key];
-			} else {
+			} else if (typeof newObj[pair.keyToAdd] === 'undefined') {
 				// key === keyToDelete, so replace key with keyToAdd and set the placeholder!
 				// Keep in mind that the property will be written again where there is no pair.
 				newObj[pair.keyToAdd] = "__placeholder__";

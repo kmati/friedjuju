@@ -1,0 +1,28 @@
+<html>
+	<head>
+		<script type="text/javascript" src="../j2m-0.0.1.js"></script>
+		<script type="text/javascript" src="../j2j-0.0.1.js"></script>
+		<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css"/>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
+		<link rel="stylesheet" href="../examples.css"/>
+		<link rel="stylesheet" href="styles.css"/>
+		<title>Sample page using j2m Components with j2j</title>
+		<script type="text/javascript" src="customer-edit-view.js"></script>
+	</head>
+	<body>
+		<a href="/">Examples Main</a><br/>
+		<h1>Sample page using j2m Components with j2j</h1>
+
+		<div id="divContent"></div>
+
+		<script type="text/javascript">
+		// update the divContent element with the customer edit view
+		// (the view will render the data described in the JSON)
+		updateCustomerEditView({
+			title: 'Mrs.', first_name: 'Gilda', last_name: 'Smythe', suffix: 'Jr.',
+			street: '1600 Massachusetts Street', city: 'Sydney', state: 'NSW', country: 'Australia'
+		}, document.getElementById('divContent'));
+		</script>
+
+	</body>
+</html>

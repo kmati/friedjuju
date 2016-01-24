@@ -26,11 +26,11 @@ var obj = {
 //var expr = '?.name';
 //var expr = '*.address';
 //var expr = 'people[1]';
-//var expr = '*.address[country=USA]';
+var expr = '*.address[country=USA]';
 //var expr = 'people.address[country=USA]';
 //var expr = '*[country=USA]';
 //var expr = '$1desc';
-var expr = 'people[1].*.city';
+//var expr = 'people[1].*.city';
 //var expr = 'people[2].?.city';
 var matches = j2j.query(expr, obj);
 console.log('expr = ' + expr);
