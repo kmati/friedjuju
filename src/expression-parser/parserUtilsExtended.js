@@ -418,7 +418,7 @@ var parserUtilsExtended = {
 
 		var succeeded = true;
 		['=', '@', '[', ']'].forEach(function (ch) {
-			ret = parserCommonFunctions.checkMatch(str, '=', index);
+			ret = parserCommonFunctions.checkMatch(str, ch, index);
 			if (ret) {
 				succeeded = false;
 			}
