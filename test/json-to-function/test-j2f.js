@@ -1,5 +1,5 @@
 /*
- * The unit tests for the expression-parser
+ * The unit tests for the j2f
  */
 var j2f = require('../../src/json-to-function/j2f.js');
 
