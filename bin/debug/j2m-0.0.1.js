@@ -1461,7 +1461,6 @@ String.prototype.repeat = function (count) {
  * 6. You can use dot expressions in the property names as a shorthand notation. The elements will be recursively created.
  *
  */
-
 var j2mTransformer = require('./j2mTransformer.js'),
 	markupPrinter = require('./markupPrinter.js'),
 	domElementConverter = require('../vdom/domElementConverter.js');

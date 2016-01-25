@@ -1221,7 +1221,6 @@ if (typeof module !== 'undefined') {
  * This module is used to invoke functions that are bound to objects within an object graph.
  * The functions are bound to the objects via expressions (Usages 2 and 3).
  */
-
 var expressionQuery = require('../json-to-json/expressionQuery.js');
 
 // We need window for the browser-side so that j2f is declared globally on the browser;

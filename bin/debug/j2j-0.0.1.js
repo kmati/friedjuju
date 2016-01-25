@@ -1570,7 +1570,6 @@ if (typeof module !== 'undefined') {
 /*
  * This module is used to query and to transform JSON from one structure to another.
  */
-
 var expressionQuery = require('./expressionQuery.js'),
 	objectGraphCreator = require('../json-to-markup/objectGraphCreator');
 
