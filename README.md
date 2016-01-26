@@ -41,13 +41,11 @@ j2m also contains a [virtual DOM implementation](src/vdom) that allows you to up
 
 # Installation
 
-The usual, get or clone the repo and then:
+Execute the following command:
 
 ```
-npm install
+npm install friedjuju
 ```
-
-At some point, I will put friedjuju on npm but for now you should get the repo from Github (https://github.com/kmati/friedjuju).
 
 # How to Build
 
@@ -56,24 +54,18 @@ You can build the all the libraries for use in the browser by:
 Changing the current working directory to the build directory:
 
 ```
-cd build
+cd path/to/friedjuju-root-directory
 ```
 
-From there, you should run the build-all.js script passing in the environment (debug or release).
-
-*Debug build:*
+From there, you should run the following command:
 
 ```
-node build-all.js -target debug
+npm run-script build-all
 ```
 
-*Release build:*
+This command will build the debug and release products for all 3 products: j2m, j2j and j2f.
 
-```
-node build-all.js -target release
-```
-
-This will generate the following files in the bin/debug or bin/release directory (depending on the -target value). You can then use that in your web project:
+This will generate the following files in the bin/debug and bin/release directories. You can then use those libraries in your web project:
 
 * j2m-{version}.js (the [j2m](src/json-to-markup) library)
 * j2j-{version}.js (the [j2j](src/json-to-json) library)
