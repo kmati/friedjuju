@@ -318,7 +318,7 @@ var strippedDownMarkupParserImpl = {
 		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'Char', this, 'Chars');
 	},
 
-	// Char := !Whitespace & SpaceyChar
+	// Char := !Whitespace & !Eq & !'|' SpaceyChar
 	Char: function (str, index) {
 		if (index >= str.length) {
 			return undefined;
@@ -332,10 +332,21 @@ var strippedDownMarkupParserImpl = {
 		if (!ret) {
 			return undefined;
 		}
-
-		return {
-			newIndex: index + 1,
-			token: new Token(Token.Char, str.substr(index, 1), index)
+		var succeeded = true;
+		['|', '='].forEach(function (ch) {
+			var ret = parserCommonFunctions.checkMatch(str, ch, index);
+			if (ret) {
+				succeeded = false;
+				return;
+			}
+		});
+		if (succeeded) {
+			return {
+				newIndex: index + 1,
+				token: new Token(Token.Char, str.substr(index, 1), index)
+			}
+		} else {
+			return undefined;
 		}
 	},
 
@@ -344,17 +355,13 @@ var strippedDownMarkupParserImpl = {
 		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'SpaceyChar', this, 'SpaceyChars');
 	},
 
-	// SpaceyChar := !Eq & !Quote & '\'' & !'[' & !']' & !'(' & !')' & !'<' & !'>' & !'/'
+	// SpaceyChar := !Quote & !'\'' & !'[' & !']' & !'(' & !')' & !'<' & !'>' & !'/'
 	SpaceyChar: function (str, index) {
 		if (index >= str.length) {
 			return undefined;
 		}
 
-		var ret = this.Eq(str, index);
-		if (ret) {
-			return undefined;
-		}
-		ret = this.Quote(str, index);
+		var ret = this.Quote(str, index);
 		if (ret) {
 			return undefined;
 		}

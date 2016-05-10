@@ -249,8 +249,8 @@ The grammar is shown here:
 	Whitespaces := Whitespace+
 	Whitespace := ' ' | '\r' | '\n' | '\t'
 	Chars := Char+
-	Char := !Whitespace & SpaceyChar
+	Char := !Whitespace & !Eq & !'|' SpaceyChar
 	SpaceyChars := SpaceyChar+
-	SpaceyChar := !Eq & !Quote & '\'' & !'[' & !']' & !'(' & !')' & !'<' & !'>' & !'/'
+	SpaceyChar := !Quote & !'\'' & !'[' & !']' & !'(' & !')' & !'<' & !'>' & !'/'
 ```
 
