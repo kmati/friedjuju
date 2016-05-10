@@ -59,5 +59,17 @@ module.exports = {
 
 	    beforeExit(function() {
 	    });
+	},
+
+	test_vdom4_async: function (beforeExit, assert) {
+		j2m.updateDOMFromMarkupString('<foo id="listItemsSimple"><x>3</x>' +
+		 '</foo>', document.body);
+
+		j2m.updateDOMFromMarkupString('', document.body);
+
+		assert.eql(document.body.innerHTML, '', 'result is malformed');
+
+	    beforeExit(function() {
+	    });
 	}
 };
