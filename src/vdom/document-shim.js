@@ -67,7 +67,21 @@ if (typeof document === 'undefined') {
 
 				// Sets an attribute of the element
 				setAttribute: function (attrName, attrVal) {
-					this.attributes.push({ name: attrName, value: attrVal });
+					var foundAttr = this._getAttributeInstance(attrName);
+					if (foundAttr) {
+						foundAttr.value = attrVal;
+					} else {
+						this.attributes.push({ name: attrName, value: attrVal });
+					}
+				},
+
+				_getAttributeInstance: function (attrName) {
+					for (var c = 0; c < this.attributes.length; c++) {
+						if (this.attributes[c].name === attrName) {
+							return this.attributes[c];
+						}
+					}
+					return null;
 				},
 
 				// Removes an attribute from the element

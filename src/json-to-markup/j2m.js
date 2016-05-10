@@ -13,7 +13,8 @@
  */
 var j2mTransformer = require('./j2mTransformer.js'),
 	markupPrinter = require('./markupPrinter.js'),
-	domElementConverter = require('../vdom/domElementConverter.js');
+	domElementConverter = require('../vdom/domElementConverter.js'),
+	vdom = require('../vdom');
 
 // We need window for the browser-side so that j2m is declared globally on the browser;
 // however, since node.js has no window object, we merely create one here so that the
@@ -48,8 +49,13 @@ var j2m = window.j2m = {
 	// Transforms an object into markup and sets the markup into a DOM element
 	// obj: The object to transform
 	updateDOM: function (obj, domElement) {
-		var vdom = require('../vdom');
 		vdom.updateDOM(obj, domElement);
+	},
+
+	// Sets markup (in a string) into a DOM element
+	// obj: The object to transform
+	updateDOMFromMarkupString: function (markupString, domElement) {
+		vdom.updateDOMFromMarkupString(markupString, domElement);
 	},
 
 	// Generates a markup element from an object

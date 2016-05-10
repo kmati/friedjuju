@@ -103,6 +103,19 @@ In the second call, ```j2m.updateDOM``` returns undefined. However, it sets the 
 Technically speaking, you can use the second call for all your needs if you do NOT need to get the markup as a string and are only interested in writing content into DOM elements.
 
 
+# How to use the vdom with plain markup
+
+Okay, so what if you have some markup and want to use the vdom? Instead of ```j2m.updateDOM``` you should invoke ```j2m.updateDOMFromMarkupString``` as shown in the example below:
+
+```
+j2m.updateDOMFromMarkupString('<foo id="listItemsSimple"><x>3</x></foo>', document.body);
+j2m.updateDOMFromMarkupString('<foo id="listItemsSimple"></foo>', document.body);
+assert.eql(document.body.innerHTML, '<foo id="listItemsSimple"></foo>', 'result is malformed');
+```
+
+After the 2nd invocation of ```j2m.updateDOMFromMarkupString``` the value of ```document.body.innerHTML``` is the changed value.
+
+
 # How to use j2m and the vdom in node.js
 
 The obvious difference between the browser and node.js environments is that node.js does NOT have a DOM. So using a DOM is kind of nonsensical. However, there may be situations where in a non-browser environment you will want to simulate the effects of the browser (at least somewhat).
