@@ -1,6 +1,6 @@
 {
   "name": "friedjuju",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "repository": "https://github.com/kmati/friedjuju",
   "license": "MIT",
   "description": "A project that contains 3 libraries: (a) j2m: JSON to markup transformer, (b) j2j: JSON to JSON transformer and query tool, as well as (c) j2f: bound function invocation dispatcher when traversal occurs on object graph",
@@ -18,7 +18,7 @@
     "expresso": "*"
   },
   "engines": {
-    "node": ">=0.8.0"
+    "node": ">=4.0.0"
   },
   "scripts": {
     "build-all": "node build/build-all.js -target all",
