@@ -102,8 +102,12 @@ var treeDiffImpl = {
 		// compare tagName
 		if (oldEle.tagName.toLowerCase() !== newEle.tagName.toLowerCase()) {
 			// tagName changed
-			var diffItem = new ElementTagNameDiffItem(oldElePath, 'set', newEle.tagName);
-			diffs.push(diffItem);
+			//var diffItem = new ElementTagNameDiffItem(oldElePath, 'set', newEle.tagName);
+			var diffItem1 = new ElementDiffItem(oldElePath, 'delete', null);
+			var diffItem2 = new ElementDiffItem(oldElePath, 'add', newEle);
+			diffs.push(diffItem1);
+			diffs.push(diffItem2);
+			return diffs;
 		}
 
 		// compare attributes

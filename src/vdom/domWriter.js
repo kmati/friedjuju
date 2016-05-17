@@ -6,6 +6,26 @@
 require('./document-shim.js');
 //#DONT_BUILD_END
 
+// Populates a DOM element hierarchy with the contents in an element tree
+// domElement: The DOM element to populate
+// eleInstance: The root element of the tree
+function populateDOMElementFromElementInstance(domElement, eleInstance) {
+	var o = document.createElement(eleInstance.tagName);
+	eleInstance.attributes.forEach(function (attr) {
+		o.setAttribute(attr.name, attr.value);
+	});
+
+	eleInstance.children.forEach(function (child) {
+		if (typeof child === 'string') {
+			o.appendChild(document.createTextNode(child));
+		} else {
+			populateDOMElementFromElementInstance(o, child);
+		}
+	});
+
+	domElement.appendChild(o);
+}
+
 var domWriterImpl = {
 	// Sets the innerHTML of a DOM element
 	// ele: The DOM element
@@ -14,7 +34,8 @@ var domWriterImpl = {
 		if (typeof child === 'string') {
 			ele.innerHTML = child;
 		} else {
-			ele.innerHTML = child.toString();
+			populateDOMElementFromElementInstance(ele, child);
+			//ele.innerHTML = child.toString();
 		}
 	},
 
@@ -24,6 +45,7 @@ var domWriterImpl = {
 	// valToSet: The value to set
 	writePathsToElementOrAttr: function (pathArr, ele, valToSet, tagName) {
 		pathArr.forEach(function (pathPiece, pathIndex) {
+			var parentEle = ele;
 			if (pathPiece[0] === '@') {
 				ele.setAttribute(pathPiece.substr(1), valToSet);
 			} else if (pathPiece === '$str') {
@@ -38,19 +60,20 @@ var domWriterImpl = {
 					if (valToSet) {
 						domWriterImpl.setElementInnerHTML(stub, valToSet);
 					} else if (tagName) {
-						var nc;
-						if (pathIndex === pathArr.length - 1) {
-							nc = document.createElement(tagName);
-						} else {
-							nc = document.createElement('nop_descendant');
-						}
-						stub.appendChild(nc);
+						var newEle = document.createElement(tagName);
+						stub.appendChild(newEle);
 					}
 
 					var lastCh = stub.childNodes[0];
 					ele.appendChild(lastCh);
 
 					ele = lastCh;
+				}
+
+				if (ele && tagName && pathIndex === pathArr.length - 1) {
+					var replacementEle = document.createElement(tagName);
+					parentEle.insertBefore(replacementEle, ele);
+					parentEle.removeChild(ele);
 				}
 			}
 		});
@@ -64,6 +87,7 @@ var domWriterImpl = {
 		pathArr.forEach(function (pathPiece) {
 			if (pathPiece[0] === '@') {
 				ele.removeAttribute(pathPiece.substr(1));
+				lastParent = null;
 			} else if (pathPiece === '$str') {
 				ele.innerHTML = '';
 			} else {
