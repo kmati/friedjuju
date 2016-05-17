@@ -22,7 +22,7 @@ var domWriterImpl = {
 	// pathArr: The path to the element or attribute to set in the DOM element
 	// ele: The DOM element
 	// valToSet: The value to set
-	writePathsToElementOrAttr: function (pathArr, ele, valToSet) {
+	writePathsToElementOrAttr: function (pathArr, ele, valToSet, tagName) {
 		pathArr.forEach(function (pathPiece) {
 			if (pathPiece[0] === '@') {
 				ele.setAttribute(pathPiece.substr(1), valToSet);
@@ -35,7 +35,12 @@ var domWriterImpl = {
 				} else {
 					// the only course of action is to append the valToSet to ele!
 					var stub = document.createElement('nop');
-					domWriterImpl.setElementInnerHTML(stub, valToSet);
+					if (valToSet) {
+						domWriterImpl.setElementInnerHTML(stub, valToSet);
+					} else if (tagName) {
+						var nc = document.createElement(tagName);
+						stub.appendChild(nc);
+					}
 
 					var lastCh = stub.childNodes[0];
 					ele.appendChild(lastCh);
@@ -129,7 +134,7 @@ var diffCommander = {
 			// normalize the path to the element
 			var pathArr = this.dottifyPathExpression(diff.pathToEle);
 			// set the element
-			domWriterImpl.writePathsToElementOrAttr(pathArr, domElement, diff.ele);
+			domWriterImpl.writePathsToElementOrAttr(pathArr, domElement, diff.ele, diff.tagName);
 		}
 	}
 };
