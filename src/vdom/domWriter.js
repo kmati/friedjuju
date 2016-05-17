@@ -23,7 +23,7 @@ var domWriterImpl = {
 	// ele: The DOM element
 	// valToSet: The value to set
 	writePathsToElementOrAttr: function (pathArr, ele, valToSet, tagName) {
-		pathArr.forEach(function (pathPiece) {
+		pathArr.forEach(function (pathPiece, pathIndex) {
 			if (pathPiece[0] === '@') {
 				ele.setAttribute(pathPiece.substr(1), valToSet);
 			} else if (pathPiece === '$str') {
@@ -38,7 +38,12 @@ var domWriterImpl = {
 					if (valToSet) {
 						domWriterImpl.setElementInnerHTML(stub, valToSet);
 					} else if (tagName) {
-						var nc = document.createElement(tagName);
+						var nc;
+						if (pathIndex === pathArr.length - 1) {
+							nc = document.createElement(tagName);
+						} else {
+							nc = document.createElement('nop_descendant');
+						}
 						stub.appendChild(nc);
 					}
 
