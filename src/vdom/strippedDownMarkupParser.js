@@ -109,9 +109,33 @@ var strippedDownMarkupParserImpl = {
 			this, 'ElementChildNode');
 	},
 
-	// ElementTextValue := SpaceyChars
+	// ElementTextValue := ElementTextValueChar+
 	ElementTextValue: function (str, index) {
-		return parserCommonFunctions.exactlyOne(str, index, 'SpaceyChars', this, 'ElementTextValue');
+		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'ElementTextValueChar', this, 'ElementTextValue');
+	},
+
+	// ElementTextValueChar := !'<' & !'>'
+	ElementTextValueChar: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var succeeded = true;
+		['<', '>'].forEach(function (ch) {
+			var ret = parserCommonFunctions.checkMatch(str, ch, index);
+			if (ret) {
+				succeeded = false;
+				return;
+			}
+		});
+		if (succeeded) {
+			return {
+				newIndex: index + 1,
+				token: new Token(Token.ElementTextValueChar, str.substr(index, 1), index)
+			}
+		} else {
+			return undefined;
+		}
 	},
 
 	// OpenTagStart := '<' TagName
@@ -279,9 +303,33 @@ var strippedDownMarkupParserImpl = {
 			this, 'AttributeValue');
 	},
 
-	// AttributeValueString := SpaceyChars
+	// AttributeValueString := AttributeValueStringChar+
 	AttributeValueString: function (str, index) {
-		return parserCommonFunctions.exactlyOne(str, index, 'SpaceyChars', this, 'AttributeValueString');
+		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'AttributeValueStringChar', this, 'AttributeValueString');
+	},
+
+	// AttributeValueStringChar := !Quote & !'\''
+	AttributeValueStringChar: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var succeeded = true;
+		['"', '\''].forEach(function (ch) {
+			var ret = parserCommonFunctions.checkMatch(str, ch, index);
+			if (ret) {
+				succeeded = false;
+				return;
+			}
+		});
+		if (succeeded) {
+			return {
+				newIndex: index + 1,
+				token: new Token(Token.AttributeValueStringChar, str.substr(index, 1), index)
+			}
+		} else {
+			return undefined;
+		}
 	},
 
 	// Whitespaces := Whitespace+

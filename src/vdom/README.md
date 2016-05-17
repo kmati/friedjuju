@@ -233,7 +233,8 @@ The grammar is shown here:
 	Element := Whitespaces? OpenTagStart AttributeDeclarations? ( (OpenTagStop Children? CloseTag) | ShortCloseTag ) Whitespaces?
 	Children := ElementChildNode+
 	ElementChildNode := Element | ElementTextValue
-	ElementTextValue := SpaceyChars
+	ElementTextValue := ElementTextValueChar+
+	ElementTextValueChar := !'<' & !'>'
 	OpenTagStart := '<' TagName
 	OpenTagStop := '>'
 	CloseTag := '</' TagName '>'
@@ -245,11 +246,12 @@ The grammar is shown here:
 	Eq := '='
 	Quote := '"'
 	AttributeValue := Quote AttributeValueString Quote
-	AttributeValueString := SpaceyChars
+	AttributeValueString := AttributeValueStringChar+
+	AttributeValueStringChar := !Quote & !'\''
 	Whitespaces := Whitespace+
 	Whitespace := ' ' | '\r' | '\n' | '\t'
 	Chars := Char+
-	Char := !Whitespace & !Eq & !'|' SpaceyChar
+	Char := !Whitespace & !Eq & !'|' & SpaceyChar
 	SpaceyChars := SpaceyChar+
 	SpaceyChar := !Quote & !'\'' & !'[' & !']' & !'(' & !')' & !'<' & !'>' & !'/'
 ```
