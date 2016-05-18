@@ -71,5 +71,95 @@ module.exports = {
 
 	    beforeExit(function() {
 	    });
+	},
+
+	test_vdom5_async: function (beforeExit, assert) {
+		j2m.updateDOMFromMarkupString('<foo id="listItemsSimple">' +
+			'<x>3</x>' +
+			'<x>4</x>' +
+			'<x>5</x>' +
+		'</foo>', document.body);
+
+		j2m.updateDOMFromMarkupString('<foo id="listItemsSimple">' +
+			'<x>3</x>' +
+		'</foo>', document.body);
+
+		assert.eql(document.body.innerHTML, '<foo id="listItemsSimple"><x>3</x></foo>', 'result is malformed');
+
+	    beforeExit(function() {
+	    });
+	},
+
+	test_vdom6_async: function (beforeExit, assert) {
+		j2m.updateDOMFromMarkupString('<foo id="listItemsSimple">' +
+			'<x>3</x>' +
+			'<x>4</x>' +
+			'<x>5</x>' +
+			'<x>6</x>' +
+			'<x>7</x>' +
+		'</foo>', document.body);
+
+		j2m.updateDOMFromMarkupString('<foo id="listItemsSimple">' +
+			'<x>3</x>' +
+			'<x>7</x>' +
+		'</foo>', document.body);
+
+		assert.eql(document.body.innerHTML, '<foo id="listItemsSimple"><x>3</x><x>7</x></foo>', 'result is malformed');
+
+	    beforeExit(function() {
+	    });
+	},
+
+	test_vdom7_async: function (beforeExit, assert) {
+		j2m.updateDOMFromMarkupString('<foo id="listItemsSimple">' +
+			'<x>3</x>' +
+			'<x>4</x>' +
+			'<x>5</x>' +
+			'<x>6</x>' +
+			'<x>7</x>' +
+		'</foo>', document.body);
+
+		j2m.updateDOMFromMarkupString('<foo id="listItemsSimple">' +
+		'</foo>', document.body);
+
+		assert.eql(document.body.innerHTML, '<foo id="listItemsSimple"></foo>', 'result is malformed');
+
+	    beforeExit(function() {
+	    });
+	},
+
+	test_vdom8_async: function (beforeExit, assert) {
+		j2m.updateDOMFromMarkupString('<foo id="listItemsSimple">' +
+			'<x>3</x>' +
+			'<x>4</x>' +
+			'<x>5</x>' +
+			'<x>6</x>' +
+			'<x>7</x>' +
+		'</foo>', document.body);
+
+		j2m.updateDOMFromMarkupString('<foo id="Garth">' +
+		'</foo>', document.body);
+
+		assert.eql(document.body.innerHTML, '<foo id="Garth"></foo>', 'result is malformed');
+
+	    beforeExit(function() {
+	    });
+	},
+
+	test_vdom9_async: function (beforeExit, assert) {
+		j2m.updateDOMFromMarkupString('<foo id="listItemsSimple">' +
+			'<x>3</x>' +
+			'<x>4</x>' +
+			'<x>5</x>' +
+			'<x>6</x>' +
+			'<x>7</x>' +
+		'</foo>', document.body);
+
+		j2m.updateDOMFromMarkupString('', document.body);
+
+		assert.eql(document.body.innerHTML, '', 'result is malformed');
+
+	    beforeExit(function() {
+	    });
 	}
 };

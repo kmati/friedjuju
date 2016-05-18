@@ -94,9 +94,10 @@ var domWriterImpl = {
 				lastParent = ele;
 				var index = Number(pathPiece);
 				if (index < ele.childNodes.length) {
-					ele = ele.childNodes[Number(pathPiece)];
+					ele = ele.childNodes[index];
 				} else {
-					throw new Error('Cannot delete DOM element or attribute. No child found at index: ' + index);
+					ele = ele.childNodes[ele.childNodes.length - 1];
+					//throw new Error('Cannot delete DOM element or attribute. No child found at index: ' + index);
 				}
 				lastEle = ele;
 			}
