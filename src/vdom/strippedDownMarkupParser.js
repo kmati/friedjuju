@@ -296,40 +296,88 @@ var strippedDownMarkupParserImpl = {
 		return parserCommonFunctions.exactlyText(str, index, '"', 'Quote');
 	},
 
-	// AttributeValue := Quote AttributeValueString Quote
-	AttributeValue: function (str, index) {
-		return parserCommonFunctions.seq(str, index,
-			['Quote', 'AttributeValueString', 'Quote'],
-			this, 'AttributeValue');
+	// SingleQuote := '\''
+	SingleQuote: function (str, index) {
+		return parserCommonFunctions.exactlyText(str, index, '\'', 'SingleQuote');
 	},
 
-	// AttributeValueString := AttributeValueStringChar+
-	AttributeValueString: function (str, index) {
-		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'AttributeValueStringChar', this, 'AttributeValueString');
-	},
-
-	// AttributeValueStringChar := !Quote & !'\''
-	AttributeValueStringChar: function (str, index) {
+	// NotSingleQuote := !'\''
+	NotSingleQuote: function (str, index) {
 		if (index >= str.length) {
 			return undefined;
 		}
 
 		var succeeded = true;
-		['"', '\''].forEach(function (ch) {
-			var ret = parserCommonFunctions.checkMatch(str, ch, index);
-			if (ret) {
-				succeeded = false;
-				return;
-			}
-		});
+		var ret = parserCommonFunctions.checkMatch(str, '\'', index);
+		if (ret) {
+			succeeded = false;
+			return;
+		}
 		if (succeeded) {
 			return {
 				newIndex: index + 1,
-				token: new Token(Token.AttributeValueStringChar, str.substr(index, 1), index)
+				token: new Token(Token.NotSingleQuote, str.substr(index, 1), index)
 			}
 		} else {
 			return undefined;
 		}
+	},
+
+	// NotDoubleQuote := !'"'
+	NotDoubleQuote: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var succeeded = true;
+		var ret = parserCommonFunctions.checkMatch(str, '"', index);
+		if (ret) {
+			succeeded = false;
+			return;
+		}
+		if (succeeded) {
+			return {
+				newIndex: index + 1,
+				token: new Token(Token.NotDoubleQuote, str.substr(index, 1), index)
+			}
+		} else {
+			return undefined;
+		}
+	},
+
+	// AttributeValue := AttributeValueSingleQuoteBounded | AttributeValueDoubleQuoteBounded
+	AttributeValue: function (str, index) {
+		return parserCommonFunctions.or(str, index, 
+			['AttributeValueDoubleQuoteBounded', 'AttributeValueSingleQuoteBounded'],
+			this, 'AttributeValue');
+	},
+
+	// AttributeValueSingleQuoteBounded := SingleQuote AttributeValueStringNoSingleQuote SingleQuote
+	AttributeValueSingleQuoteBounded: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		return parserCommonFunctions.seq(str, index, ['SingleQuote', 'AttributeValueStringNoSingleQuote', 'SingleQuote'], this, 'AttributeValueSingleQuoteBounded');
+	},
+
+	// AttributeValueDoubleQuoteBounded := Quote AttributeValueStringNoDoubleQuote Quote
+	AttributeValueDoubleQuoteBounded: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		return parserCommonFunctions.seq(str, index, ['Quote', 'AttributeValueStringNoDoubleQuote', 'Quote'], this, 'AttributeValueDoubleQuoteBounded');
+	},
+
+	// AttributeValueStringNoSingleQuote := NotSingleQuote+
+	AttributeValueStringNoSingleQuote: function (str, index) {
+		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'NotSingleQuote', this, 'AttributeValueStringNoSingleQuote');
+	},
+
+	// AttributeValueStringNoDoubleQuote := NotDoubleQuote+
+	AttributeValueStringNoDoubleQuote: function (str, index) {
+		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'NotDoubleQuote', this, 'AttributeValueStringNoDoubleQuote');
 	},
 
 	// Whitespaces := Whitespace+
@@ -464,7 +512,7 @@ var markupRenderer = {
 
 		astEmitter.subscribe(['AttributeDeclaration'], function (token) {
 			var attrName = token.children[0].value,
-				attrValue = token.children[2].children[1].value;
+				attrValue = token.children[2].children[0].children[1].value;
 
 			var ele = elements[elements.length - 1];
 			ele.addAttr(new Attr(attrName, attrValue));

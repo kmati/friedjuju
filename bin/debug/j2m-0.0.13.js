@@ -1463,7 +1463,8 @@ String.prototype.repeat = function (count) {
  */
 var j2mTransformer = require('./j2mTransformer.js'),
 	markupPrinter = require('./markupPrinter.js'),
-	domElementConverter = require('../vdom/domElementConverter.js');
+	domElementConverter = require('../vdom/domElementConverter.js'),
+	vdom = require('../vdom');
 
 // We need window for the browser-side so that j2m is declared globally on the browser;
 // however, since node.js has no window object, we merely create one here so that the
@@ -1498,8 +1499,13 @@ var j2m = window.j2m = {
 	// Transforms an object into markup and sets the markup into a DOM element
 	// obj: The object to transform
 	updateDOM: function (obj, domElement) {
-		var vdom = require('../vdom');
 		vdom.updateDOM(obj, domElement);
+	},
+
+	// Sets markup (in a string) into a DOM element
+	// obj: The object to transform
+	updateDOMFromMarkupString: function (markupString, domElement) {
+		vdom.updateDOMFromMarkupString(markupString, domElement);
 	},
 
 	// Generates a markup element from an object
@@ -2017,6 +2023,26 @@ if (typeof module !== 'undefined') {
 
 //
 
+// Populates a DOM element hierarchy with the contents in an element tree
+// domElement: The DOM element to populate
+// eleInstance: The root element of the tree
+function populateDOMElementFromElementInstance(domElement, eleInstance) {
+	var o = document.createElement(eleInstance.tagName);
+	eleInstance.attributes.forEach(function (attr) {
+		o.setAttribute(attr.name, attr.value);
+	});
+
+	eleInstance.children.forEach(function (child) {
+		if (typeof child === 'string') {
+			o.appendChild(document.createTextNode(child));
+		} else {
+			populateDOMElementFromElementInstance(o, child);
+		}
+	});
+
+	domElement.appendChild(o);
+}
+
 var domWriterImpl = {
 	// Sets the innerHTML of a DOM element
 	// ele: The DOM element
@@ -2025,7 +2051,8 @@ var domWriterImpl = {
 		if (typeof child === 'string') {
 			ele.innerHTML = child;
 		} else {
-			ele.innerHTML = child.toString();
+			populateDOMElementFromElementInstance(ele, child);
+			//ele.innerHTML = child.toString();
 		}
 	},
 
@@ -2033,8 +2060,9 @@ var domWriterImpl = {
 	// pathArr: The path to the element or attribute to set in the DOM element
 	// ele: The DOM element
 	// valToSet: The value to set
-	writePathsToElementOrAttr: function (pathArr, ele, valToSet) {
-		pathArr.forEach(function (pathPiece) {
+	writePathsToElementOrAttr: function (pathArr, ele, valToSet, tagName) {
+		pathArr.forEach(function (pathPiece, pathIndex) {
+			var parentEle = ele;
 			if (pathPiece[0] === '@') {
 				ele.setAttribute(pathPiece.substr(1), valToSet);
 			} else if (pathPiece === '$str') {
@@ -2046,12 +2074,23 @@ var domWriterImpl = {
 				} else {
 					// the only course of action is to append the valToSet to ele!
 					var stub = document.createElement('nop');
-					domWriterImpl.setElementInnerHTML(stub, valToSet);
+					if (valToSet) {
+						domWriterImpl.setElementInnerHTML(stub, valToSet);
+					} else if (tagName) {
+						var newEle = document.createElement(tagName);
+						stub.appendChild(newEle);
+					}
 
 					var lastCh = stub.childNodes[0];
 					ele.appendChild(lastCh);
 
 					ele = lastCh;
+				}
+
+				if (ele && tagName && pathIndex === pathArr.length - 1) {
+					var replacementEle = document.createElement(tagName);
+					parentEle.insertBefore(replacementEle, ele);
+					parentEle.removeChild(ele);
 				}
 			}
 		});
@@ -2065,15 +2104,17 @@ var domWriterImpl = {
 		pathArr.forEach(function (pathPiece) {
 			if (pathPiece[0] === '@') {
 				ele.removeAttribute(pathPiece.substr(1));
+				lastParent = null;
 			} else if (pathPiece === '$str') {
 				ele.innerHTML = '';
 			} else {
 				lastParent = ele;
 				var index = Number(pathPiece);
 				if (index < ele.childNodes.length) {
-					ele = ele.childNodes[Number(pathPiece)];
+					ele = ele.childNodes[index];
 				} else {
-					throw new Error('Cannot delete DOM element or attribute. No child found at index: ' + index);
+					ele = ele.childNodes[ele.childNodes.length - 1];
+					//throw new Error('Cannot delete DOM element or attribute. No child found at index: ' + index);
 				}
 				lastEle = ele;
 			}
@@ -2140,7 +2181,7 @@ var diffCommander = {
 			// normalize the path to the element
 			var pathArr = this.dottifyPathExpression(diff.pathToEle);
 			// set the element
-			domWriterImpl.writePathsToElementOrAttr(pathArr, domElement, diff.ele);
+			domWriterImpl.writePathsToElementOrAttr(pathArr, domElement, diff.ele, diff.tagName);
 		}
 	}
 };
@@ -2175,7 +2216,13 @@ if (typeof module !== 'undefined') {
  */
 var treeDiff = require('./treeDiff.js'),
 	domWriter = require('./domWriter.js'),
-	j2mTransformer = require('../json-to-markup/j2mTransformer.js');
+	j2mTransformer = require('../json-to-markup/j2mTransformer.js'),
+	strippedDownMarkupParser = require('./strippedDownMarkupParser.js');
+
+function updateDOMImpl(oldRootEle, newRootEle, domElement) {
+	var diffs = treeDiff.diff(oldRootEle, newRootEle);
+	domWriter.writeDiffsToDOMElement(diffs, domElement);
+}
 
 var vdom = {
 	// Transforms an object into markup and sets the markup into a DOM element
@@ -2183,11 +2230,14 @@ var vdom = {
 	updateDOM: function (obj, domElement) {
 		var oldRootEle = j2mTransformer.envelopeDOMElement(domElement);
 		var newRootEle = j2mTransformer.transform(obj);
-
-		var diffs = treeDiff.diff(oldRootEle, newRootEle);
-
-		domWriter.writeDiffsToDOMElement(diffs, domElement);
+		updateDOMImpl(oldRootEle, newRootEle, domElement);
 	},
+
+	updateDOMFromMarkupString: function (markupString, domElement) {
+		var oldRootEle = j2mTransformer.envelopeDOMElement(domElement);
+		var newRootEle = strippedDownMarkupParser.parse('<__ROOT__>' + markupString + '</__ROOT__>');
+		updateDOMImpl(oldRootEle, newRootEle, domElement);
+	}
 };
 
 if (typeof module !== 'undefined') {
@@ -2195,7 +2245,7 @@ if (typeof module !== 'undefined') {
 	module.exports = vdom;
 }
 
-},{"../json-to-markup/j2mTransformer.js":11,"./domWriter.js":16,"./treeDiff.js":19}],18:[function(require,module,exports){
+},{"../json-to-markup/j2mTransformer.js":11,"./domWriter.js":16,"./strippedDownMarkupParser.js":18,"./treeDiff.js":19}],18:[function(require,module,exports){
 /*
  * Simple stripped-down markup parser which uses the "Simple stripped-down markup grammar"
  */
@@ -2307,9 +2357,33 @@ var strippedDownMarkupParserImpl = {
 			this, 'ElementChildNode');
 	},
 
-	// ElementTextValue := SpaceyChars
+	// ElementTextValue := ElementTextValueChar+
 	ElementTextValue: function (str, index) {
-		return parserCommonFunctions.exactlyOne(str, index, 'SpaceyChars', this, 'ElementTextValue');
+		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'ElementTextValueChar', this, 'ElementTextValue');
+	},
+
+	// ElementTextValueChar := !'<' & !'>'
+	ElementTextValueChar: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var succeeded = true;
+		['<', '>'].forEach(function (ch) {
+			var ret = parserCommonFunctions.checkMatch(str, ch, index);
+			if (ret) {
+				succeeded = false;
+				return;
+			}
+		});
+		if (succeeded) {
+			return {
+				newIndex: index + 1,
+				token: new Token(Token.ElementTextValueChar, str.substr(index, 1), index)
+			}
+		} else {
+			return undefined;
+		}
 	},
 
 	// OpenTagStart := '<' TagName
@@ -2470,16 +2544,88 @@ var strippedDownMarkupParserImpl = {
 		return parserCommonFunctions.exactlyText(str, index, '"', 'Quote');
 	},
 
-	// AttributeValue := Quote AttributeValueString Quote
+	// SingleQuote := '\''
+	SingleQuote: function (str, index) {
+		return parserCommonFunctions.exactlyText(str, index, '\'', 'SingleQuote');
+	},
+
+	// NotSingleQuote := !'\''
+	NotSingleQuote: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var succeeded = true;
+		var ret = parserCommonFunctions.checkMatch(str, '\'', index);
+		if (ret) {
+			succeeded = false;
+			return;
+		}
+		if (succeeded) {
+			return {
+				newIndex: index + 1,
+				token: new Token(Token.NotSingleQuote, str.substr(index, 1), index)
+			}
+		} else {
+			return undefined;
+		}
+	},
+
+	// NotDoubleQuote := !'"'
+	NotDoubleQuote: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var succeeded = true;
+		var ret = parserCommonFunctions.checkMatch(str, '"', index);
+		if (ret) {
+			succeeded = false;
+			return;
+		}
+		if (succeeded) {
+			return {
+				newIndex: index + 1,
+				token: new Token(Token.NotDoubleQuote, str.substr(index, 1), index)
+			}
+		} else {
+			return undefined;
+		}
+	},
+
+	// AttributeValue := AttributeValueSingleQuoteBounded | AttributeValueDoubleQuoteBounded
 	AttributeValue: function (str, index) {
-		return parserCommonFunctions.seq(str, index,
-			['Quote', 'AttributeValueString', 'Quote'],
+		return parserCommonFunctions.or(str, index, 
+			['AttributeValueDoubleQuoteBounded', 'AttributeValueSingleQuoteBounded'],
 			this, 'AttributeValue');
 	},
 
-	// AttributeValueString := SpaceyChars
-	AttributeValueString: function (str, index) {
-		return parserCommonFunctions.exactlyOne(str, index, 'SpaceyChars', this, 'AttributeValueString');
+	// AttributeValueSingleQuoteBounded := SingleQuote AttributeValueStringNoSingleQuote SingleQuote
+	AttributeValueSingleQuoteBounded: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		return parserCommonFunctions.seq(str, index, ['SingleQuote', 'AttributeValueStringNoSingleQuote', 'SingleQuote'], this, 'AttributeValueSingleQuoteBounded');
+	},
+
+	// AttributeValueDoubleQuoteBounded := Quote AttributeValueStringNoDoubleQuote Quote
+	AttributeValueDoubleQuoteBounded: function (str, index) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		return parserCommonFunctions.seq(str, index, ['Quote', 'AttributeValueStringNoDoubleQuote', 'Quote'], this, 'AttributeValueDoubleQuoteBounded');
+	},
+
+	// AttributeValueStringNoSingleQuote := NotSingleQuote+
+	AttributeValueStringNoSingleQuote: function (str, index) {
+		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'NotSingleQuote', this, 'AttributeValueStringNoSingleQuote');
+	},
+
+	// AttributeValueStringNoDoubleQuote := NotDoubleQuote+
+	AttributeValueStringNoDoubleQuote: function (str, index) {
+		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'NotDoubleQuote', this, 'AttributeValueStringNoDoubleQuote');
 	},
 
 	// Whitespaces := Whitespace+
@@ -2516,7 +2662,7 @@ var strippedDownMarkupParserImpl = {
 		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'Char', this, 'Chars');
 	},
 
-	// Char := !Whitespace & SpaceyChar
+	// Char := !Whitespace & !Eq & !'|' SpaceyChar
 	Char: function (str, index) {
 		if (index >= str.length) {
 			return undefined;
@@ -2530,10 +2676,21 @@ var strippedDownMarkupParserImpl = {
 		if (!ret) {
 			return undefined;
 		}
-
-		return {
-			newIndex: index + 1,
-			token: new Token(Token.Char, str.substr(index, 1), index)
+		var succeeded = true;
+		['|', '='].forEach(function (ch) {
+			var ret = parserCommonFunctions.checkMatch(str, ch, index);
+			if (ret) {
+				succeeded = false;
+				return;
+			}
+		});
+		if (succeeded) {
+			return {
+				newIndex: index + 1,
+				token: new Token(Token.Char, str.substr(index, 1), index)
+			}
+		} else {
+			return undefined;
 		}
 	},
 
@@ -2542,17 +2699,13 @@ var strippedDownMarkupParserImpl = {
 		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'SpaceyChar', this, 'SpaceyChars');
 	},
 
-	// SpaceyChar := !Eq & !Quote & '\'' & !'[' & !']' & !'(' & !')' & !'<' & !'>' & !'/'
+	// SpaceyChar := !Quote & !'\'' & !'[' & !']' & !'(' & !')' & !'<' & !'>' & !'/'
 	SpaceyChar: function (str, index) {
 		if (index >= str.length) {
 			return undefined;
 		}
 
-		var ret = this.Eq(str, index);
-		if (ret) {
-			return undefined;
-		}
-		ret = this.Quote(str, index);
+		var ret = this.Quote(str, index);
 		if (ret) {
 			return undefined;
 		}
@@ -2607,7 +2760,7 @@ var markupRenderer = {
 
 		astEmitter.subscribe(['AttributeDeclaration'], function (token) {
 			var attrName = token.children[0].value,
-				attrValue = token.children[2].children[1].value;
+				attrValue = token.children[2].children[0].children[1].value;
 
 			var ele = elements[elements.length - 1];
 			ele.addAttr(new Attr(attrName, attrValue));
@@ -2756,8 +2909,12 @@ var treeDiffImpl = {
 		// compare tagName
 		if (oldEle.tagName.toLowerCase() !== newEle.tagName.toLowerCase()) {
 			// tagName changed
-			var diffItem = new ElementTagNameDiffItem(oldElePath, 'set', newEle.tagName);
-			diffs.push(diffItem);
+			//var diffItem = new ElementTagNameDiffItem(oldElePath, 'set', newEle.tagName);
+			var diffItem1 = new ElementDiffItem(oldElePath, 'delete', null);
+			var diffItem2 = new ElementDiffItem(oldElePath, 'add', newEle);
+			diffs.push(diffItem1);
+			diffs.push(diffItem2);
+			return diffs;
 		}
 
 		// compare attributes

@@ -245,9 +245,20 @@ The grammar is shown here:
 	AttributeName := Chars
 	Eq := '='
 	Quote := '"'
-	AttributeValue := Quote AttributeValueString Quote
-	AttributeValueString := AttributeValueStringChar+
-	AttributeValueStringChar := !Quote & !'\''
+	SingleQuote := '\''
+	NotSingleQuote := !'\''
+	NotDoubleQuote := !'"'
+
+	//AttributeValue := Quote AttributeValueString Quote
+	//AttributeValueString := AttributeValueStringChar+
+	//AttributeValueStringChar := !Quote & !'\''
+
+	AttributeValue := AttributeValueSingleQuoteBounded | AttributeValueDoubleQuoteBounded
+	AttributeValueSingleQuoteBounded := SingleQuote AttributeValueStringNoSingleQuote SingleQuote
+	AttributeValueDoubleQuoteBounded := Quote AttributeValueStringNoDoubleQuote Quote
+	AttributeValueStringNoSingleQuote := NotSingleQuote+
+	AttributeValueStringNoDoubleQuote := NotDoubleQuote+
+
 	Whitespaces := Whitespace+
 	Whitespace := ' ' | '\r' | '\n' | '\t'
 	Chars := Char+
