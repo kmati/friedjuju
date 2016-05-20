@@ -370,14 +370,14 @@ var strippedDownMarkupParserImpl = {
 		return parserCommonFunctions.seq(str, index, ['Quote', 'AttributeValueStringNoDoubleQuote', 'Quote'], this, 'AttributeValueDoubleQuoteBounded');
 	},
 
-	// AttributeValueStringNoSingleQuote := NotSingleQuote+
+	// AttributeValueStringNoSingleQuote := NotSingleQuote*
 	AttributeValueStringNoSingleQuote: function (str, index) {
-		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'NotSingleQuote', this, 'AttributeValueStringNoSingleQuote');
+		return parserCommonFunctions.onlyRepeat0Plus(str, index, 'NotSingleQuote', this, 'AttributeValueStringNoSingleQuote');
 	},
 
-	// AttributeValueStringNoDoubleQuote := NotDoubleQuote+
+	// AttributeValueStringNoDoubleQuote := NotDoubleQuote*
 	AttributeValueStringNoDoubleQuote: function (str, index) {
-		return parserCommonFunctions.onlyRepeat1Plus(str, index, 'NotDoubleQuote', this, 'AttributeValueStringNoDoubleQuote');
+		return parserCommonFunctions.onlyRepeat0Plus(str, index, 'NotDoubleQuote', this, 'AttributeValueStringNoDoubleQuote');
 	},
 
 	// Whitespaces := Whitespace+

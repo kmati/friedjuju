@@ -256,8 +256,8 @@ The grammar is shown here:
 	AttributeValue := AttributeValueSingleQuoteBounded | AttributeValueDoubleQuoteBounded
 	AttributeValueSingleQuoteBounded := SingleQuote AttributeValueStringNoSingleQuote SingleQuote
 	AttributeValueDoubleQuoteBounded := Quote AttributeValueStringNoDoubleQuote Quote
-	AttributeValueStringNoSingleQuote := NotSingleQuote+
-	AttributeValueStringNoDoubleQuote := NotDoubleQuote+
+	AttributeValueStringNoSingleQuote := NotSingleQuote*
+	AttributeValueStringNoDoubleQuote := NotDoubleQuote*
 
 	Whitespaces := Whitespace+
 	Whitespace := ' ' | '\r' | '\n' | '\t'

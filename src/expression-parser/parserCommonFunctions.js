@@ -70,10 +70,6 @@ var parserCommonFunctions = {
 			}
 		}
 
-		if (token.children.length < 1) {
-			return undefined;
-		}
-
 		token.value = str.substring(originalIndex, index);
 		return {
 			newIndex: index,
@@ -138,6 +134,41 @@ var parserCommonFunctions = {
 		var originalIndex = index;
 		var token = new Token(tokenToBeReturned, '', index);
 		var ret = this.repeat1Plus(str, index, productionName, ctxt);
+		if (ret) {
+			index = ret.newIndex;
+			token.addChild(ret.token);
+		}
+
+		if (token.children.length > 0) {
+			token.value = str.substring(originalIndex, index);
+			return {
+				newIndex: index,
+				token: token
+			};
+		}
+
+		return undefined;
+	},
+
+	// Repeats a production in a ()* fashion, i.e. repeat 1 or more times.
+	// This must be used only when the production is of the form:
+	//	A := B*
+	//		i.e. where the only factor of A is B which can repeat 0 or more times.
+	//
+	// str: The string to process
+	// index: The index at which to start the repetitiom
+	// productionName: The name of the production (i.e. B in the example above)
+	// ctxt: The object that contains the production functions
+	// tokenToBeReturned: The name of the token by which the resulting token will be labeled (i.e. A in the example above)
+	// Returns: The { newIndex: number, token: Token } result if there is a match OR undefined
+	onlyRepeat0Plus: function (str, index, productionName, ctxt, tokenToBeReturned) {
+		if (index >= str.length) {
+			return undefined;
+		}
+
+		var originalIndex = index;
+		var token = new Token(tokenToBeReturned, '', index);
+		var ret = this.repeat0Plus(str, index, productionName, ctxt);
 		if (ret) {
 			index = ret.newIndex;
 			token.addChild(ret.token);
