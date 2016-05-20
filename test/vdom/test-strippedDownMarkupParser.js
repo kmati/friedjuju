@@ -65,5 +65,12 @@ module.exports = {
 		
 	    beforeExit(function() {
 	    });
+	},
+
+	test_parse4_async: function (beforeExit, assert) {
+		var ele = strippedDownMarkupParser.parse('<__ROOT__><div class="_2CPvTYUBfcUIrCvy9_qDDa">Loading...</div></__ROOT__>');
+		assert.eql(true, ele !== null && ele !== undefined);
+	    beforeExit(function() {
+	    });
 	}
 };

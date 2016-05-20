@@ -267,7 +267,7 @@ var parserCommonFunctions = {
 		var token = new Token(Token[productionName], '', index);
 
 		while (index < str.length) {
-			ret = ctxt[productionName](str, index);
+			var ret = ctxt[productionName](str, index);
 			if (ret) {
 				token.addChild(ret.token);
 				index = ret.newIndex;
