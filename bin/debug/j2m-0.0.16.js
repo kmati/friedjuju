@@ -2151,7 +2151,7 @@ var domWriterImpl = {
 			}
 		});
 
-		if (lastParent) {
+		if (lastParent && lastEle) {
 			lastParent.removeChild(lastEle);
 		}
 	}
